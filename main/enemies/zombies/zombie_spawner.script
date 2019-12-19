@@ -1,0 +1,64 @@
+helpers = require("utility.helpers") -- imports dump() & len() functions
+
+local spawn_positions = { left = '/left_spawn', right = '/right_spawn' }
+local zombie_spawn_limit = 10
+
+function init(self)
+	pprint("zombie_spawner.script.post() url is " .. msg.url())
+	self.current_spawn_side = 'left'
+	self.spawn_sides = {'left', 'right'}
+	self.timeline_timer = 0
+	self.zombie_left_spawns = 0
+	self.zombie_right_spawns = 0
+	self.zombies_spawned = 0
+	self.zombie_types = { 'zombie_a', 'zombie_b', 'zombie_c', 'zombie_d' }
+end
+
+function update(self, dt)
+	-- TODO: Update spawn timer formula.
+	self.timeline_timer = self.timeline_timer + dt
+	spawn_delay = math.random(2, 5)
+
+	if spawn_delay <= self.timeline_timer and zombie_spawn_limit ~= self.zombies_spawned then
+		zombie_type = self.zombie_types[math.random(1, len(self.zombie_types))]
+		spawn_position = go.get_position(spawn_positions[self.current_spawn_side])
+		spawn_zombie(self, zombie_type, spawn_position)
+		self.timeline_timer = 0
+	end
+
+end
+
+function spawn_zombie(self, zombie_type, spawn_position)
+	if zombie_type then
+		zombie_id = factory.create("/zombie_spawner#" .. zombie_type, spawn_position)
+		zombie_sprite_url = msg.url(nil, zombie_id, "sprite")
+		zombie_script_url = msg.url(nil, zombie_id, "script")
+		if self.current_spawn_side == 'right' then
+			sprite.set_hflip(zombie_sprite_url, true)
+		end
+		msg.post(zombie_script_url, "set_move_direction", { direction=self.current_spawn_side })
+		msg.post(zombie_sprite_url, "play_animation", { id=hash("walk_forward") })
+	end
+	update_zombie_spawn_count(self)
+	update_current_spawn_side(self)
+end
+
+function update_zombie_spawn_count(self)
+	if self.current_spawn_side == 'left' then
+		self.zombie_left_spawns = self.zombie_left_spawns + 1
+	elseif self.current_spawn_side == 'right' then
+		self.zombie_right_spawns = self.zombie_right_spawns + 1
+	end
+	self.zombies_spawned = self.zombies_spawned + 1
+end
+
+function update_current_spawn_side(self)
+	if self.zombie_left_spawns > self.zombie_right_spawns then
+		new_side = self.spawn_sides[2]  -- right side
+	elseif self.zombie_right_spawns > self.zombie_left_spawns then
+		new_side = self.spawn_sides[1]  -- left side
+	else
+		new_side = self.spawn_sides[math.random(1, len(self.spawn_sides))]
+	end
+	self.current_spawn_side = new_side
+end

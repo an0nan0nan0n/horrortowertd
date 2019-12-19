@@ -1,0 +1,15 @@
+pprint('game: Loaded game.script for game screen')
+
+-- Track player stats & related global variables in this script.
+-- This will be part of a 'controller' game object for the main game collection(s).
+local health = 100
+local ammo = 100
+local gold = 0
+local tier = 1
+
+function init(self)
+	self.health = health
+	self.ammo = ammo
+	self.gold = gold
+	self.tier = tier
+end

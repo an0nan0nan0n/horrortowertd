@@ -1,0 +1,106 @@
+image: "/gamelib/assets/sprites/zombies/female_zombie_a.png"
+tile_width: 23
+tile_height: 42
+tile_margin: 0
+tile_spacing: 0
+collision: "/gamelib/assets/sprites/zombies/female_zombie_a.png"
+material_tag: "tile"
+convex_hulls {
+  index: 0
+  count: 15
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 15
+  count: 16
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 31
+  count: 15
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 46
+  count: 14
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 60
+  count: 15
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 75
+  count: 14
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 89
+  count: 14
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 103
+  count: 15
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 118
+  count: 14
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 132
+  count: 16
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 148
+  count: 16
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 164
+  count: 16
+  collision_group: "enemy"
+}
+collision_groups: "enemy"
+animations {
+  id: "idle"
+  start_tile: 9
+  end_tile: 9
+  playback: PLAYBACK_ONCE_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "walk_down"
+  start_tile: 1
+  end_tile: 3
+  playback: PLAYBACK_LOOP_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "walk_forward"
+  start_tile: 7
+  end_tile: 9
+  playback: PLAYBACK_LOOP_FORWARD
+  fps: 2
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "walk_up"
+  start_tile: 10
+  end_tile: 12
+  playback: PLAYBACK_LOOP_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+extrude_borders: 2
+inner_padding: 0

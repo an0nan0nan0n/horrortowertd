@@ -1,0 +1,58 @@
+-- List of level options can be found inside the logic block for on_message.
+pprint('level_loader: Game loaded.')
+
+local function load_main_menu(self)
+	msg.post("/screens#main_menu", "load")
+end
+
+local function unload_main_menu(self)
+	msg.post("/screens#main_menu", "unload")
+end
+
+local function load_game(self)
+	msg.post("/screens#main_level", "load")
+end
+
+local function unload_game(self)
+	msg.post("/screens#main_level", "unload")
+end
+
+local function load_death_screen(self)
+	msg.post("/screens#death_screen", "load")
+end
+
+local function unload_death_screen(self)
+	msg.post("/screens#death_screen", "unload")
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	load_main_menu(self)
+end
+
+function final(self)
+	msg.post(".", "release_input_focus")
+end
+
+function on_message(self, message_id, message, sender)
+	-- instead of assuming which screens are loaded / unloaded it would be better to load/unload based on flags
+	if message_id == hash("goto_main_menu_via_game") then
+		unload_game(self)
+		load_main_menu(self)
+	elseif message_id == hash("goto_main_menu_via_death_screen") then
+		unload_death_screen(self)
+		load_main_menu(self)
+	elseif message_id == hash("goto_game_via_main_menu") then
+		unload_main_menu(self)
+		load_game(self)
+	elseif message_id == hash("kill_player") then
+		unload_game(self)
+		load_death_screen(self)
+	elseif message_id == hash("revive_player") then
+		unload_death_screen(self)
+		load_game(self)
+	elseif message_id == hash("proxy_loaded") then
+		msg.post(sender, "init")
+		msg.post(sender, "enable")
+	end 
+end

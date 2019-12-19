@@ -1,0 +1,72 @@
+-- Handles FMOD calls, split from the controller script for maintainability.
+require "utility.helpers"
+
+function init(self)
+	ppprint("fmod.script url is " .. msg.url())
+	msg.post(".", "acquire_input_focus")
+	local bundle_path = sys.get_application_path() -- The path to your game's directory	
+	pprint('current bundle_resources dir is ' .. bundle_path)	
+	local path_to_banks = bundle_path .. "\\banks"	
+	pprint('current soundbank dir is ' .. path_to_banks)	
+
+	-- Detect other OS and overwrite path_to_banks if detected.	
+	local system_name = sys.get_sys_info().system_name	
+	if system_name == "Darwin" then	
+		path_to_banks = bundle_path .. "/Contents/Resources/banks"	
+		pprint('Mac detected, new soundbank dir is ' .. path_to_banks)	
+	elseif system_name == "Android" then	
+		path_to_banks = "file:///android_asset/banks"	
+		pprint('Android detected, new soundbank dir is ' .. path_to_banks)	
+	end
+end
+
+function update(self, dt)
+end
+
+function on_message(self, message_id, message, sender)
+	if self.event then
+		self.event:stop()
+	end
+
+	-- Load soundbanks
+	-- Replace this with parameters in the future.
+	if message_id == hash("load_banks") then
+		fmod.studio.system:load_bank_memory(resource.load('/gamelib/fmod/banks/Master.bank'), fmod.STUDIO_LOAD_BANK_NORMAL)
+		fmod.studio.system:load_bank_memory(resource.load('/gamelib/fmod/banks/Master.strings.bank'), fmod.STUDIO_LOAD_BANK_NORMAL)
+		fmod.studio.system:load_bank_memory(resource.load('/gamelib/fmod/banks/Music.bank'), fmod.STUDIO_LOAD_BANK_NORMAL)
+	end
+
+	-- Replace with table in future from utility.constants.lua module.
+	if message_id == hash("intro_song") then
+		fmod_sound = "event:/Music/Level 02"
+	end
+	if message_id == hash("level_1_song") then
+		fmod_sound = "event:/Music/Level 03"
+	end
+
+	-- Get events and start the events where needed.
+	-- Replace this so that the passed parameters populate it.
+	if fmod_sound then
+		local event_description = fmod.studio.system:get_event(fmod_sound)
+		local event = event_description:create_instance()
+		self.event = event
+		self.event:start()
+
+		-- Error handling example
+		local ok, err = pcall(function ()
+			fmod.studio.system:get_event(fmod_sound)
+		end)
+		if not ok then
+			pprint(err)
+			local code = fmod.error_code[err] -- The FMOD error code (a number).
+			pprint(code)
+			if code == fmod.ERR_EVENT_NOTFOUND then
+				pprint("Ooops! This event doesn't exist!")
+			end
+		end
+	end
+end
+
+function final(self)
+	msg.post(".", "release_input_focus")
+end

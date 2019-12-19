@@ -1,0 +1,33 @@
+images {
+  image: "/gamelib/assets/background.png"
+}
+images {
+  image: "/gamelib/assets/sprites/menu.png"
+}
+images {
+  image: "/gamelib/assets/sprites/ammobar.png"
+}
+images {
+  image: "/gamelib/assets/sprites/crate.png"
+}
+images {
+  image: "/gamelib/assets/sprites/moneybar.png"
+}
+images {
+  image: "/gamelib/assets/sprites/tier_button.png"
+}
+images {
+  image: "/gamelib/assets/sprites/healthbar.png"
+}
+images {
+  image: "/gamelib/assets/title_screen.png"
+}
+images {
+  image: "/gamelib/assets/death_screen.png"
+}
+images {
+  image: "/gamelib/assets/sprites/terrain/ground.png"
+}
+margin: 0
+extrude_borders: 0
+inner_padding: 0

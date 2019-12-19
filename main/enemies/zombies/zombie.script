@@ -1,0 +1,31 @@
+-- Adjust higher for faster, lower for slower
+local directions = { left = 35, right = -35}
+
+function init(self)
+	pprint('zombie: spawned zombie with url: ' .. msg.url())
+	self.pos = go.get_position()
+	self.direction = 0
+	self.velocity = vmath.vector3(0, 0, 0)
+	self.reached_destination = false
+end
+
+function update(self, dt)
+	-- Move every game update.
+	if self.reached_destination == false then
+		-- TODO: Could this formula be improved?
+		self.pos = self.pos + self.velocity * dt
+		go.set_position(self.pos)
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	-- Stop moving when we hit the tower collision.
+	if message_id == hash("collision_response") then
+		self.reached_destination = true
+	end
+	
+	if message_id == hash('set_move_direction') then
+		self.direction = directions[message.direction]
+		self.velocity = vmath.vector3(self.direction, 0, 0)
+	end
+end

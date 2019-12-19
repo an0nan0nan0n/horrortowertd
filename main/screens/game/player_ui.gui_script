@@ -1,0 +1,57 @@
+pprint('player_ui: Loaded player UI')
+
+function init(self)
+	-- Initialize and set variables
+	pprint("player_ui.gui_script.post() url is " .. msg.url())
+	msg.post(".", "acquire_input_focus")
+
+	-- Load GUI nodes.
+	healthbar = gui.get_node("healthbar")
+	ammobar = gui.get_node("ammobar")
+	ability1 = gui.get_node("ability1")
+	ability2 = gui.get_node("ability2")
+	ability3 = gui.get_node("ability3")
+	ability_selector = gui.get_node("ability_selector")
+	moneybar = gui.get_node("moneybar")
+	tierbar = gui.get_node("tierbar")
+	current_money = gui.get_node("current_money")
+	current_tier = gui.get_node("current_tier")
+	kill_button = gui.get_node("kill_button")
+
+	-- Load FMOD sound banks.
+	-- msg.post("main:/fmod#fmod", "load_banks")
+	-- msg.post("main:/fmod#fmod", "intro_song")
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		if gui.pick_node(ability1, action.x, action.y) or gui.pick_node(ability2, action.x, action.y) or gui.pick_node(ability3, action.x, action.y) then
+			-- gui.set_texture(ability1, "main")
+			-- gui.play_flipbook(ability1, )
+			msg.post(".", "release_input_focus")
+		end
+		if gui.pick_node(kill_button, action.x, action.y) then
+			gui.set_enabled(kill_button, false)
+			cleanup_player_ui()
+			msg.post("level_loader:/level_loader#script", "kill_player")
+			msg.post(".", "release_input_focus")
+		end
+	end
+end
+
+function cleanup_player_ui(self)
+	gui.delete_node(healthbar)
+	gui.delete_node(ammobar)
+	gui.delete_node(ability1)
+	gui.delete_node(ability2)
+	gui.delete_node(ability3)
+	gui.delete_node(ability_selector)
+	gui.delete_node(moneybar)
+	gui.delete_node(tierbar)
+	gui.delete_node(current_money)
+	gui.delete_node(current_tier)
+	gui.delete_node(kill_button)
+end
+
+function final(self)
+end

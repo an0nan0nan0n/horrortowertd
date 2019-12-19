@@ -1,0 +1,24 @@
+pprint('main_menu: Loaded main_menu screen')
+
+function init(self)
+	-- Initialize and set variables
+	msg.post(".", "acquire_input_focus")
+	start_button = gui.get_node("start_button")
+	-- msg.post("main:/fmod#fmod", "load_banks")
+	-- msg.post("main:/fmod#fmod", "intro_song")
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		if gui.pick_node(start_button, action.x, action.y) then
+			gui.delete_node(start_button)
+			gui.set_enabled(start_button, false)
+			msg.post("level_loader:/level_loader#script", "goto_game_via_main_menu")
+			pprint('Loading game screen from main_menu screen')
+			msg.post(".", "release_input_focus")
+		end
+	end
+end
+
+function final(self)
+end

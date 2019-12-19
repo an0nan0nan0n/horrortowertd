@@ -1,0 +1,30 @@
+images {
+  image: "/gamelib/assets/sprites/ability_armor.png"
+}
+images {
+  image: "/gamelib/assets/sprites/ability_armor_tapped.png"
+}
+images {
+  image: "/gamelib/assets/sprites/ability_shoot.png"
+}
+images {
+  image: "/gamelib/assets/sprites/ability_shoot_tapped.png"
+}
+images {
+  image: "/gamelib/assets/sprites/ability_turret.png"
+}
+images {
+  image: "/gamelib/assets/sprites/ability_turret_tapped.png"
+}
+images {
+  image: "/gamelib/assets/sprites/select_tower_abilities_tapped.png"
+}
+images {
+  image: "/gamelib/assets/sprites/select_tower_abilities.png"
+}
+images {
+  image: "/gamelib/assets/sprites/ability_empty.png"
+}
+margin: 0
+extrude_borders: 2
+inner_padding: 0
