@@ -28,6 +28,15 @@ images {
 images {
   image: "/gamelib/assets/sprites/terrain/ground.png"
 }
+images {
+  image: "/gamelib/assets/sprites/full_health.png"
+}
+images {
+  image: "/gamelib/assets/sprites/half_health.png"
+}
+images {
+  image: "/gamelib/assets/sprites/low_health.png"
+}
 margin: 0
 extrude_borders: 0
 inner_padding: 0

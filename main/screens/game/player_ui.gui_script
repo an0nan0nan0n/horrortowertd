@@ -7,10 +7,17 @@ function init(self)
 
 	-- Load GUI nodes.
 	healthbar = gui.get_node("healthbar")
+	health_value = gui.get_node("health_value")
+	full_health = gui.get_node("full_health")
+	half_health = gui.get_node("half_health")
+	low_health = gui.get_node("low_health")
 	ammobar = gui.get_node("ammobar")
 	ability1 = gui.get_node("ability1")
+	tapped1 = gui.get_node("tapped1")
 	ability2 = gui.get_node("ability2")
+	tapped2 = gui.get_node("tapped2")
 	ability3 = gui.get_node("ability3")
+	tapped3 = gui.get_node("tapped3")
 	ability_selector = gui.get_node("ability_selector")
 	moneybar = gui.get_node("moneybar")
 	tierbar = gui.get_node("tierbar")
@@ -18,29 +25,117 @@ function init(self)
 	current_tier = gui.get_node("current_tier")
 	kill_button = gui.get_node("kill_button")
 
+	-- Hide GUI nodes with conditional toggles.
+	gui.set_enabled(full_health, true)
+	gui.set_enabled(half_health, false)
+	gui.set_enabled(low_health, false)
+	gui.set_enabled(tapped1, false)
+	gui.set_enabled(tapped2, false)
+	gui.set_enabled(tapped3, false)
+
+	-- Set values.
+	self.current_health = gui.get_text(health_value)
+
 	-- Load FMOD sound banks.
 	-- msg.post("main:/fmod#fmod", "load_banks")
 	-- msg.post("main:/fmod#fmod", "intro_song")
 end
 
+function set_health_gui(self)
+	-- Determine which health bar value node to display inside of the healthbar node.
+	gui.set_scale(full_health, vmath.vector3(0, 0, 0))
+	if self.current_health == 100 or self.current_health > 50 then
+		node_to_set = full_health
+	elseif self.current_health > 25 and self.current_health <= 50 and self.current_health < 100 then
+		node_to_set = half_health
+	elseif self.current_health <= 25 and self.current_health > 0 then
+		node_to_set = low_health
+	elseif self.current_health <= 0 then
+		node_to_set = nil
+	end
+
+	-- If we have more than 0 health, we have one to set, otherwise we don't.
+	if node_to_set ~= nil then
+		gui.set_enabled(node_to_set, true)
+	else
+		kill_player(self)
+	end
+
+	-- Enable the health bar value node for the health value it matches.
+	if gui.is_enabled(full_health) and node_to_set ~= full_health then
+		gui.set_enabled(full_health, false)
+	end
+	if gui.is_enabled(half_health) and node_to_set ~= half_health then
+		gui.set_enabled(half_health, false)
+	end
+	if gui.is_enabled(low_health) and node_to_set ~= low_health then
+		gui.set_enabled(low_health, false)
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	health_text = gui.get_text(health_value)
+	if message_id == hash("add_health") then
+		self.current_health = self.current_health + message.health
+		if health_text + 0 <= 100 then
+			gui.set_text(health_value, self.current_health)
+		end
+		set_health_gui(self)
+		print('Current player health is ' .. self.current_health)
+	end
+	if message_id == hash("subtract_health") then
+		self.current_health = self.current_health - message.health
+		if health_text + 0 >= 0 and health_text + 0 > -1 then
+			gui.set_text(health_value, self.current_health)
+		end
+		set_health_gui(self)
+		print('Current player health is ' .. self.current_health)
+	end
+end
+
+function on_update(self)
+	-- Doesn't work with .gui_script objects.
+end
+
+function play_tap_animation(self, starting_state, tapped_state)
+	-- TODO: Fix this.
+	gui.set_enabled(gui.get_node(starting_state), false)
+	gui.set_enabled(gui.get_node(tapped_state), true)
+	timer.delay(1, true, function(self, handle, time_elapsed) timer.cancel(handle) end)
+	gui.set_enabled(gui.get_node(starting_state), true)
+	gui.set_enabled(gui.get_node(tapped_state), false)
+
+end
+
 function on_input(self, action_id, action)
 	if action_id == hash("touch") and action.pressed then
-		if gui.pick_node(ability1, action.x, action.y) or gui.pick_node(ability2, action.x, action.y) or gui.pick_node(ability3, action.x, action.y) then
-			-- gui.set_texture(ability1, "main")
-			-- gui.play_flipbook(ability1, )
-			msg.post(".", "release_input_focus")
+		if gui.pick_node(ability1, action.x, action.y) then
+			print('ability1 tapped')
+			play_tap_animation(self, 'ability1', 'tapped1')
+		elseif gui.pick_node(ability2, action.x, action.y) then
+			print('ability2 tapped')
+			play_tap_animation(self, 'ability2', 'tapped2')
+		elseif gui.pick_node(ability3, action.x, action.y) then
+			print('ability3 tapped')
+			play_tap_animation(self, 'ability3', 'tapped3')
 		end
+	
 		if gui.pick_node(kill_button, action.x, action.y) then
-			gui.set_enabled(kill_button, false)
-			cleanup_player_ui()
-			msg.post("level_loader:/level_loader#script", "kill_player")
-			msg.post(".", "release_input_focus")
+			kill_player(self)
 		end
 	end
 end
 
-function cleanup_player_ui(self)
+function kill_player(self)
+	gui.set_enabled(kill_button, false)
+	msg.post("level_loader:/level_loader#script", "kill_player")
+end
+
+function final(self)
 	gui.delete_node(healthbar)
+	gui.delete_node(full_health)
+	gui.delete_node(half_health)
+	gui.delete_node(low_health)
 	gui.delete_node(ammobar)
 	gui.delete_node(ability1)
 	gui.delete_node(ability2)
@@ -51,7 +146,5 @@ function cleanup_player_ui(self)
 	gui.delete_node(current_money)
 	gui.delete_node(current_tier)
 	gui.delete_node(kill_button)
-end
-
-function final(self)
+	msg.post(".", "release_input_focus")
 end

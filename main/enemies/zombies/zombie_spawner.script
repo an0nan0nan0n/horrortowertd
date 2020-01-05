@@ -1,17 +1,18 @@
 helpers = require("utility.helpers") -- imports dump() & len() functions
 
 local spawn_positions = { left = '/left_spawn', right = '/right_spawn' }
-local zombie_spawn_limit = 10
+local zombie_spawn_limit = 10  -- Current spawn limit for zombies.
 
 function init(self)
 	pprint("zombie_spawner.script.post() url is " .. msg.url())
-	self.current_spawn_side = 'left'
-	self.spawn_sides = {'left', 'right'}
-	self.timeline_timer = 0
-	self.zombie_left_spawns = 0
-	self.zombie_right_spawns = 0
-	self.zombies_spawned = 0
-	self.zombie_types = { 'zombie_a', 'zombie_b', 'zombie_c', 'zombie_d' }
+	self.current_spawn_side = 'left' -- First zombie spawns from the left.
+	self.spawn_sides = {'left', 'right'} -- Both spawn sides for use in update_current_spawn_side()
+	self.timeline_timer = 0  -- Used for the spawn timer formula in update()
+	self.zombie_left_spawns = 0  -- Tracks the count for zombies spawned from the left.
+	self.zombie_right_spawns = 0  -- Tracks the count for zombies spawned from the right.
+	self.zombies_spawned = 0  -- Tracks the total count of zombies spawned, regardless of side.
+	self.zombie_objects = {}  -- Tracks every newly created zombie game object.
+	self.zombie_types = { 'zombie_a', 'zombie_b', 'zombie_c', 'zombie_d' }  -- Possible zombie game objects from the main/enemies/zombies folder.
 end
 
 function update(self, dt)
@@ -19,6 +20,8 @@ function update(self, dt)
 	self.timeline_timer = self.timeline_timer + dt
 	spawn_delay = math.random(2, 5)
 
+	-- If the spawn delay is less than or equal to the spawn timer,
+	-- & the current zombies spawned are not equal the zombie spawn limit, spawn a new zombie.
 	if spawn_delay <= self.timeline_timer and zombie_spawn_limit ~= self.zombies_spawned then
 		zombie_type = self.zombie_types[math.random(1, len(self.zombie_types))]
 		spawn_position = go.get_position(spawn_positions[self.current_spawn_side])
@@ -29,21 +32,28 @@ function update(self, dt)
 end
 
 function spawn_zombie(self, zombie_type, spawn_position)
+	-- Spawns a zombie, calls the update functions for counts and spawn sides for the next zombie.
+	-- Also flips the sprite for the zombie based on the side it spawns from.
+	-- Tallies the newly created zombie sprite to the self.zombie_sprites table.
 	if zombie_type then
 		zombie_id = factory.create("/zombie_spawner#" .. zombie_type, spawn_position)
 		zombie_sprite_url = msg.url(nil, zombie_id, "sprite")
 		zombie_script_url = msg.url(nil, zombie_id, "script")
+		table.insert(self.zombie_objects, zombie_id)
+		print('current zombie game objects: ' .. dump(self.zombie_objects))
 		if self.current_spawn_side == 'right' then
 			sprite.set_hflip(zombie_sprite_url, true)
 		end
 		msg.post(zombie_script_url, "set_move_direction", { direction=self.current_spawn_side })
 		msg.post(zombie_sprite_url, "play_animation", { id=hash("walk_forward") })
+		print('zombie spawned from ' .. self.current_spawn_side .. ' side.')
 	end
 	update_zombie_spawn_count(self)
 	update_current_spawn_side(self)
 end
 
 function update_zombie_spawn_count(self)
+	-- Tracks how many zombies are spawned total and logs to self.zombies_spawned.
 	if self.current_spawn_side == 'left' then
 		self.zombie_left_spawns = self.zombie_left_spawns + 1
 	elseif self.current_spawn_side == 'right' then
@@ -53,6 +63,7 @@ function update_zombie_spawn_count(self)
 end
 
 function update_current_spawn_side(self)
+	-- Changes the side for zombies to spawn from, based on the amount of zombies on each side.
 	if self.zombie_left_spawns > self.zombie_right_spawns then
 		new_side = self.spawn_sides[2]  -- right side
 	elseif self.zombie_right_spawns > self.zombie_left_spawns then
