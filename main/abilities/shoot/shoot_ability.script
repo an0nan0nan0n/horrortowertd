@@ -1,29 +1,30 @@
+helpers = require("utility.helpers") -- imports dump() & len() functions
+
 function init(self)
-	-- Add initialization code here
-	-- Remove this function if not needed
-end
-
-function final(self)
-	-- Add finalization code here
-	-- Remove this function if not needed
-end
-
-function update(self, dt)
-	-- Add update code here
-	-- Remove this function if not needed
+	pprint("shoot_ability.script: url is " .. msg.url())
+	self.shot_types = { 'shoot_a', 'shoot_b' }  -- Possible shoot game objects from the main/abilities/shoot folder.
+	self.waiting = false
 end
 
 function on_message(self, message_id, message, sender)
-	-- Add message-handling code here
-	-- Remove this function if not needed
+	if message_id == hash("shoot") then
+		shot_type = self.shot_types[math.random(1, len(self.shot_types))]
+		shoot(self, shot_type, message.spawn_position)
+	end
 end
 
-function on_input(self, action_id, action)
-	-- Add input-handling code here
-	-- Remove this function if not needed
+function shoot(self, shot_type, spawn_position)
+	-- Spawns a shot sprite matching shot_type at the spawn_position set by the tap.
+	if self.waiting == false then
+		pprint('shoot_ability.script: shooting at position: ' .. spawn_position)
+		shot = factory.create("/shoot_ability#" .. shot_type, spawn_position)
+		go.set_scale(vmath.vector3(0.6, 0.5, 1), shot)
+		self.waiting = true
+		timer.delay(0.25, false, function(self, handle, time_elapsed) delete_shot(self, shot) end)
+	end
 end
 
-function on_reload(self)
-	-- Add reload-handling code here
-	-- Remove this function if not needed
+function delete_shot(self, shot)
+	go.delete(shot)
+	self.waiting = false
 end

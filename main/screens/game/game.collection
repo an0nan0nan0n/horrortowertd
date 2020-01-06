@@ -59,6 +59,26 @@ instances {
     z: 1.0
   }
 }
+instances {
+  id: "shoot_ability"
+  prototype: "/main/abilities/shoot/shoot_ability.go"
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
 scale_along_z: 0
 embedded_instances {
   id: "background"
@@ -422,6 +442,27 @@ embedded_instances {
   "  }\n"
   "}\n"
   ""
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "abilities"
+  children: "shoot_ability"
+  data: ""
   position {
     x: 0.0
     y: 0.0
