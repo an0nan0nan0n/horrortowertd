@@ -11,10 +11,16 @@ function init(self)
 	self.zombie_left_spawns = 0  -- Tracks the count for zombies spawned from the left.
 	self.zombie_right_spawns = 0  -- Tracks the count for zombies spawned from the right.
 	self.zombies_spawned = 0  -- Tracks the total count of zombies spawned, regardless of side.
-	self.zombie_objects = {}  -- Tracks every newly created zombie game object.
+	self.zombie_game_objects = {} -- Tracks spawned zombie game objects.
 	self.zombie_types = { 'zombie_a', 'zombie_b', 'zombie_c', 'zombie_d' }  -- Possible zombie game objects from the main/enemies/zombies folder.
 end
 
+function on_message(self, message_id, message, sender)
+	if message_id == hash("kill_zombie") then
+		go.delete(sender)
+	end
+end
+	
 function update(self, dt)
 	-- TODO: Update spawn timer formula.
 	self.timeline_timer = self.timeline_timer + dt
@@ -29,6 +35,10 @@ function update(self, dt)
 		self.timeline_timer = 0
 	end
 
+	for k, v in pairs(self.zombie_game_objects) do
+		-- TODO: Kill zombies with 0 health.
+		-- print(k, v)
+	end
 end
 
 function spawn_zombie(self, zombie_type, spawn_position)
@@ -39,8 +49,7 @@ function spawn_zombie(self, zombie_type, spawn_position)
 		zombie_id = factory.create("/zombie_spawner#" .. zombie_type, spawn_position)
 		zombie_sprite_url = msg.url(nil, zombie_id, "sprite")
 		zombie_script_url = msg.url(nil, zombie_id, "script")
-		table.insert(self.zombie_objects, zombie_id)
-		print('zombie_spawner.script: current zombie game objects: ' .. dump(self.zombie_objects))
+		table.insert(self.zombie_game_objects, zombie_id)
 		if self.current_spawn_side == 'right' then
 			sprite.set_hflip(zombie_sprite_url, true)
 		end

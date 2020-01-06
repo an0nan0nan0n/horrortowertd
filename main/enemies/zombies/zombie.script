@@ -25,8 +25,8 @@ end
 
 function on_message(self, message_id, message, sender)
 	-- Stop moving when we hit the tower collision.
-	if message_id == hash("collision_response") then
-		if self.reached_destination ~= true then
+	if message_id == hash("collision_response") and message.group == hash("environment") then
+		if self.reached_destination == false then
 			msg.post("/controller#game", "subtract_health", { health = damage }) -- In the future, used the playing of an attack animation to deal this damage.
 			print("zombie.script: zombie dealt " .. damage .. " damage to the player.")
 		end
@@ -36,5 +36,12 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash('set_move_direction') then
 		self.direction = directions[message.direction]
 		self.velocity = vmath.vector3(self.direction, 0, 0)
+	end
+
+	if message_id == hash("subtract_health") then
+		self.health = self.health - message.health
+		if self.health <= 0 then
+			pprint("i should die")
+		end
 	end
 end
