@@ -1,15 +1,45 @@
-pprint('game: Loaded game.script for game screen')
+pprint('game.script: Loading game.script for game screen. Be sure to place this script inside of a "controller" game object for a collection.')
 
--- Track player stats & related global variables in this script.
--- This will be part of a 'controller' game object for the main game collection(s).
-local health = 100
-local ammo = 100
-local gold = 0
-local tier = 1
+-- Set properties that can be tweaked for the game without need to modify the script logic.
+go.property("health", 100)
+go.property("ammo", 100)
+go.property("gold", 1)
+go.property("tier", 1)
 
 function init(self)
-	self.health = health
-	self.ammo = ammo
-	self.gold = gold
-	self.tier = tier
+	pprint("game.script: url is " .. msg.url())
+	self.health = go.get("/controller#game", "health")
+	self.ammo = go.get("/controller#game", "ammo")
+	self.gold = go.get("/controller#game", "gold")
+	self.tier = go.get("/controller#game", "tier")
+	-- Load FMOD sound banks.
+	-- msg.post("main:/fmod#fmod", "load_banks")
+	-- msg.post("main:/fmod#fmod", "intro_song")
 end
+
+function update(self)
+	-- Game update loop.
+	-- If the player ever reaches or drops below 0 health, kill them.
+	if self.health <= 0 then
+		msg.post("level_loader:/level_loader#script", "kill_player")
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	-- Message handler to modify the game as needed.
+	if message_id == hash("add_health") then
+		self.health = self.health + message.health
+		msg.post("/ui#player_ui", "update_health_ui", { health_value_to_set = self.health })
+	end
+
+	if message_id == hash("subtract_health") then
+		self.health = self.health - message.health
+		msg.post("/ui#player_ui", "update_health_ui", { health_value_to_set = self.health })
+	end
+
+	if message_id == hash("kill_player") then
+		msg.post("level_loader:/level_loader#script", "kill_player")
+	end
+end
+
+pprint('game.script: Successfully loaded.')

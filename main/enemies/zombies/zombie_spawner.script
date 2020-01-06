@@ -4,7 +4,7 @@ local spawn_positions = { left = '/left_spawn', right = '/right_spawn' }
 local zombie_spawn_limit = 10  -- Current spawn limit for zombies.
 
 function init(self)
-	pprint("zombie_spawner.script.post() url is " .. msg.url())
+	pprint("zombie_spawner.script: url is " .. msg.url())
 	self.current_spawn_side = 'left' -- First zombie spawns from the left.
 	self.spawn_sides = {'left', 'right'} -- Both spawn sides for use in update_current_spawn_side()
 	self.timeline_timer = 0  -- Used for the spawn timer formula in update()
@@ -40,13 +40,13 @@ function spawn_zombie(self, zombie_type, spawn_position)
 		zombie_sprite_url = msg.url(nil, zombie_id, "sprite")
 		zombie_script_url = msg.url(nil, zombie_id, "script")
 		table.insert(self.zombie_objects, zombie_id)
-		print('current zombie game objects: ' .. dump(self.zombie_objects))
+		print('zombie_spawner.script: current zombie game objects: ' .. dump(self.zombie_objects))
 		if self.current_spawn_side == 'right' then
 			sprite.set_hflip(zombie_sprite_url, true)
 		end
 		msg.post(zombie_script_url, "set_move_direction", { direction=self.current_spawn_side })
 		msg.post(zombie_sprite_url, "play_animation", { id=hash("walk_forward") })
-		print('zombie spawned from ' .. self.current_spawn_side .. ' side.')
+		print('zombie_spawner.script: zombie spawned from ' .. self.current_spawn_side .. ' side.')
 	end
 	update_zombie_spawn_count(self)
 	update_current_spawn_side(self)

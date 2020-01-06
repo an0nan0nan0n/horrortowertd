@@ -1,16 +1,14 @@
-pprint('player_ui: Loaded player UI')
+pprint('player_ui.gui_script: Loading player UI')
 
 function init(self)
 	-- Initialize and set variables
-	pprint("player_ui.gui_script.post() url is " .. msg.url())
+	script_url = msg.url()
+	pprint("player_ui.gui_script: script url is " .. script_url)
 	msg.post(".", "acquire_input_focus")
 
 	-- Load GUI nodes.
 	healthbar = gui.get_node("healthbar")
-	health_value = gui.get_node("health_value")
-	full_health = gui.get_node("full_health")
-	half_health = gui.get_node("half_health")
-	low_health = gui.get_node("low_health")
+	health_text = gui.get_node("health_text")
 	ammobar = gui.get_node("ammobar")
 	ability1 = gui.get_node("ability1")
 	tapped1 = gui.get_node("tapped1")
@@ -26,120 +24,110 @@ function init(self)
 	kill_button = gui.get_node("kill_button")
 
 	-- Hide GUI nodes with conditional toggles.
-	gui.set_enabled(full_health, true)
-	gui.set_enabled(half_health, false)
-	gui.set_enabled(low_health, false)
 	gui.set_enabled(tapped1, false)
 	gui.set_enabled(tapped2, false)
 	gui.set_enabled(tapped3, false)
 
-	-- Set values.
-	self.current_health = gui.get_text(health_value)
+	-- Set any GUI that needs to be set on init.
+	starting_healthbar_position = gui.get_position(healthbar)
+	healthbar_positions = {}
+	healthbar_positions[100] = starting_healthbar_position 
 
-	-- Load FMOD sound banks.
-	-- msg.post("main:/fmod#fmod", "load_banks")
-	-- msg.post("main:/fmod#fmod", "intro_song")
-end
-
-function set_health_gui(self)
-	-- Determine which health bar value node to display inside of the healthbar node.
-	gui.set_scale(full_health, vmath.vector3(0, 0, 0))
-	if self.current_health == 100 or self.current_health > 50 then
-		node_to_set = full_health
-	elseif self.current_health > 25 and self.current_health <= 50 and self.current_health < 100 then
-		node_to_set = half_health
-	elseif self.current_health <= 25 and self.current_health > 0 then
-		node_to_set = low_health
-	elseif self.current_health <= 0 then
-		node_to_set = nil
+	-- Index 100 is 100 health (full) so we loop 99 to 0 for the rest.
+	for i=99,0,-1 do
+		x = (100 - i) * 2.2
+		-- print('x is ' .. x .. ' for i value: ' .. i)
+		healthbar_positions[i] = { x = healthbar_positions[100].x - x, y = healthbar_positions[100].y, z = healthbar_positions[100].z }
 	end
 
-	-- If we have more than 0 health, we have one to set, otherwise we don't.
-	if node_to_set ~= nil then
-		gui.set_enabled(node_to_set, true)
-	else
-		kill_player(self)
-	end
-
-	-- Enable the health bar value node for the health value it matches.
-	if gui.is_enabled(full_health) and node_to_set ~= full_health then
-		gui.set_enabled(full_health, false)
-	end
-	if gui.is_enabled(half_health) and node_to_set ~= half_health then
-		gui.set_enabled(half_health, false)
-	end
-	if gui.is_enabled(low_health) and node_to_set ~= low_health then
-		gui.set_enabled(low_health, false)
-	end
-end
-
-function on_message(self, message_id, message, sender)
-	health_text = gui.get_text(health_value)
-	if message_id == hash("add_health") then
-		self.current_health = self.current_health + message.health
-		if health_text + 0 <= 100 then
-			gui.set_text(health_value, self.current_health)
-		end
-		set_health_gui(self)
-		print('Current player health is ' .. self.current_health)
-	end
-	if message_id == hash("subtract_health") then
-		self.current_health = self.current_health - message.health
-		if health_text + 0 >= 0 and health_text + 0 > -1 then
-			gui.set_text(health_value, self.current_health)
-		end
-		set_health_gui(self)
-		print('Current player health is ' .. self.current_health)
-	end
 end
 
 function on_update(self)
 	-- Doesn't work with .gui_script objects.
+	-- Leave here for reference's sake.
 end
 
-function play_tap_animation(self, starting_state, tapped_state)
-	-- TODO: Fix this.
+function on_message(self, message_id, message, sender)
+	-- Message handler for the player gui - should be sent from game.script
+	if message_id == hash("update_health_ui") then
+		update_health_ui(self, message.health_value_to_set)
+	end
+end
+
+function get_current_health(self)
+	-- Get the current health from the game controller script.
+	return go.get("/controller#game", "health")
+end
+
+function update_health_ui(self, health_value_to_set)
+	-- Re-scale and re-position the healthbar as damage is taken, and update the health text to match the player's current health.
+	x_scale_mult = 0.008
+	healthbar_x_scale = health_value_to_set * x_scale_mult
+	healthbar_x_position = healthbar_positions[health_value_to_set].x
+
+	gui.set_scale(healthbar, vmath.vector3(healthbar_x_scale, 0.7, 0.2))
+	gui.set_position(healthbar, vmath.vector3(healthbar_x_position, starting_healthbar_position.y, starting_healthbar_position.z))
+	gui.set_text(health_text, health_value_to_set)
+end
+
+function play_ability_tap_animation(self, starting_state, tapped_state)
+	-- Utilizes a timer.delay() and play_tap_animation_callback() function to change the button animation as the player taps it.
 	gui.set_enabled(gui.get_node(starting_state), false)
 	gui.set_enabled(gui.get_node(tapped_state), true)
-	timer.delay(1, true, function(self, handle, time_elapsed) timer.cancel(handle) end)
-	gui.set_enabled(gui.get_node(starting_state), true)
-	gui.set_enabled(gui.get_node(tapped_state), false)
+	timer.delay(1, true, function(self, handle, time_elapsed) play_ability_tap_animation_callback(self, starting_state, tapped_state) end)
 
+	-- The callback function for the timer.delay() to execute after it is finished delaying.
+	function play_ability_tap_animation_callback(self, starting_state, tapped_state)
+		gui.set_enabled(gui.get_node(starting_state), true)
+		gui.set_enabled(gui.get_node(tapped_state), false)
+	end
+end
+
+function enable_tapped_ability_icon(self, tapped_state)
+	-- Disables all currently tapped ability icons and only enables the one in tapped_state
+	gui.set_enabled(tapped1, false)
+	gui.set_enabled(tapped2, false)
+	gui.set_enabled(tapped3, false)
+	gui.set_enabled(tapped_state, true)
 end
 
 function on_input(self, action_id, action)
 	if action_id == hash("touch") and action.pressed then
+		-- Ability buttons:
 		if gui.pick_node(ability1, action.x, action.y) then
 			print('ability1 tapped')
-			play_tap_animation(self, 'ability1', 'tapped1')
-		elseif gui.pick_node(ability2, action.x, action.y) then
-			print('ability2 tapped')
-			play_tap_animation(self, 'ability2', 'tapped2')
-		elseif gui.pick_node(ability3, action.x, action.y) then
-			print('ability3 tapped')
-			play_tap_animation(self, 'ability3', 'tapped3')
+			enable_tapped_ability_icon(self, tapped1)
 		end
-	
+		if gui.pick_node(ability2, action.x, action.y) then
+			print('ability2 tapped')
+			enable_tapped_ability_icon(self, tapped2)
+		end
+		if gui.pick_node(ability3, action.x, action.y) then
+			print('ability3 tapped')
+			enable_tapped_ability_icon(self, tapped3)
+		end
+
+		-- This isn't used, but left here as a reference for if we want button tap functionality on some abilities.
+		-- play_ability_tap_animation(self, 'ability1', 'tapped1')
+
+		-- Debug buttons:
 		if gui.pick_node(kill_button, action.x, action.y) then
-			kill_player(self)
+			msg.post("/controller#game", "kill_player")
 		end
 	end
 end
 
-function kill_player(self)
-	gui.set_enabled(kill_button, false)
-	msg.post("level_loader:/level_loader#script", "kill_player")
-end
-
 function final(self)
+	-- Teardown function for UI, ensures no elements remain after screen transitions.
 	gui.delete_node(healthbar)
-	gui.delete_node(full_health)
-	gui.delete_node(half_health)
-	gui.delete_node(low_health)
+	gui.delete_node(health_text)
 	gui.delete_node(ammobar)
 	gui.delete_node(ability1)
 	gui.delete_node(ability2)
 	gui.delete_node(ability3)
+	gui.delete_node(tapped1)
+	gui.delete_node(tapped2)
+	gui.delete_node(tapped3)
 	gui.delete_node(ability_selector)
 	gui.delete_node(moneybar)
 	gui.delete_node(tierbar)
@@ -147,4 +135,7 @@ function final(self)
 	gui.delete_node(current_tier)
 	gui.delete_node(kill_button)
 	msg.post(".", "release_input_focus")
+	pprint('player_ui.gui_script: tore down GUI nodes via final()')
 end
+
+pprint('player_ui: Loaded player UI')

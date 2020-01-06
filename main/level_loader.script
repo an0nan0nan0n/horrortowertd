@@ -1,5 +1,5 @@
 -- List of level options can be found inside the logic block for on_message.
-pprint('level_loader: Game loaded.')
+pprint('level_loader.script: Level loader script loading...')
 
 local function load_main_menu(self)
 	msg.post("/screens#main_menu", "load")
@@ -46,6 +46,7 @@ function on_message(self, message_id, message, sender)
 		unload_main_menu(self)
 		load_game(self)
 	elseif message_id == hash("kill_player") then
+		pprint('level_loader.script: Killing player by calling unload_game(self) & load_death_screen(self)')
 		unload_game(self)
 		load_death_screen(self)
 	elseif message_id == hash("revive_player") then
@@ -56,3 +57,5 @@ function on_message(self, message_id, message, sender)
 		msg.post(sender, "enable")
 	end 
 end
+
+pprint('level_loader.script: Successfully loaded.')

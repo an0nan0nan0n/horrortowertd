@@ -1,10 +1,13 @@
--- Adjust higher for faster, lower for slower
-local directions = { left = 35, right = -35}
-
+-- Set properties that can be tweaked for the game without need to modify the script logic.
+speed = 35
 health = 5
 damage = 10
 
 function init(self)
+	pprint("zombie.script: url is " .. msg.url())
+	directions = { left = math.abs(speed), right = math.abs(speed) * -1}
+	print('zombie.script: zombie speed values: ' .. dump(directions))
+
 	self.pos = go.get_position()
 	self.direction = 0
 	self.velocity = vmath.vector3(0, 0, 0)
@@ -24,8 +27,8 @@ function on_message(self, message_id, message, sender)
 	-- Stop moving when we hit the tower collision.
 	if message_id == hash("collision_response") then
 		if self.reached_destination ~= true then
-			msg.post("/ui#player_ui", "subtract_health", { health = damage }) -- In the future, used the playing of an attack animation to deal this damage.
-			print("zombie dealt " .. damage .. " damage to the player.")
+			msg.post("/controller#game", "subtract_health", { health = damage }) -- In the future, used the playing of an attack animation to deal this damage.
+			print("zombie.script: zombie dealt " .. damage .. " damage to the player.")
 		end
 		self.reached_destination = true
 	end
