@@ -1,9 +1,11 @@
 helpers = require("utility.helpers") -- imports dump() & len() functions
 
+delay_between_shots = 0.25
+
 function init(self)
 	pprint("shoot_ability.script: url is " .. msg.url())
 	self.shot_types = { 'shoot_a', 'shoot_b' }  -- Possible shoot game objects from the main/abilities/shoot folder.
-	self.waiting = false
+	self.shot_currently_active = false  -- Toggles to true if a shot is spawned, false otherwise.
 end
 
 function on_message(self, message_id, message, sender)
@@ -15,16 +17,19 @@ end
 
 function shoot(self, shot_type, spawn_position)
 	-- Spawns a shot sprite matching shot_type at the spawn_position set by the tap.
-	if self.waiting == false then
+	-- Deletes it after a delay matching the delay_between_shots value at the top of the script.
+	-- Player cannot cast shoot again until after this delay.
+	if self.shot_currently_active == false then -- If not shot is spawned already, then shoot
 		pprint('shoot_ability.script: shooting at position: ' .. spawn_position)
 		shot = factory.create("/shoot_ability#" .. shot_type, spawn_position)
 		go.set_scale(vmath.vector3(0.6, 0.5, 1), shot)
-		self.waiting = true
-		timer.delay(0.25, false, function(self, handle, time_elapsed) delete_shot(self, shot) end)
+		self.shot_currently_active = true
+		timer.delay(delay_between_shots, false, function(self, handle, time_elapsed) delete_shot(self, shot) end)
 	end
 end
 
 function delete_shot(self, shot)
+	-- Callback function for shoot, and resets self.waiting to false.
 	go.delete(shot)
-	self.waiting = false
+	self.shot_currently_active = false
 end

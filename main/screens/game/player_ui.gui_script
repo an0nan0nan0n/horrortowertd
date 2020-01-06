@@ -11,6 +11,7 @@ function init(self)
 	healthbar = gui.get_node("healthbar")
 	health_text = gui.get_node("health_text")
 	ammobar = gui.get_node("ammobar")
+	ammo_text = gui.get_node("ammo_text")
 	ability1 = gui.get_node("ability1")
 	tapped1 = gui.get_node("tapped1")
 	ability2 = gui.get_node("ability2")
@@ -32,13 +33,17 @@ function init(self)
 	-- Set any GUI that needs to be set on init.
 	starting_healthbar_position = gui.get_position(healthbar)
 	healthbar_positions = {}
-	healthbar_positions[100] = starting_healthbar_position 
+	healthbar_positions[100] = starting_healthbar_position
+	starting_ammobar_position = gui.get_position(ammobar)
+	ammobar_positions = {}
+	ammobar_positions[100] = starting_ammobar_position
 
-	-- Index 100 is 100 health (full) so we loop 99 to 0 for the rest.
+	-- Index 100 is 100 health/ammo (full) so we loop 99 to 0 for the rest.
 	for i=99,0,-1 do
 		x = (100 - i) * 2.2
 		-- print('x is ' .. x .. ' for i value: ' .. i)
 		healthbar_positions[i] = { x = healthbar_positions[100].x - x, y = healthbar_positions[100].y, z = healthbar_positions[100].z }
+		ammobar_positions[i] = { x = ammobar_positions[100].x - x, y = ammobar_positions[100].y, z = ammobar_positions[100].z }
 	end
 
 end
@@ -52,6 +57,10 @@ function on_message(self, message_id, message, sender)
 	-- Message handler for the player gui - should be sent from game.script
 	if message_id == hash("update_health_ui") then
 		update_health_ui(self, message.health_value_to_set)
+	end
+
+	if message_id == hash("update_ammo_ui") then
+		update_ammo_ui(self, message.ammo_value_to_set)
 	end
 
 	if message_id == hash("set_ability") then
@@ -110,6 +119,17 @@ function update_health_ui(self, health_value_to_set)
 	gui.set_scale(healthbar, vmath.vector3(healthbar_x_scale, 0.7, 0.2))
 	gui.set_position(healthbar, vmath.vector3(healthbar_x_position, starting_healthbar_position.y, starting_healthbar_position.z))
 	gui.set_text(health_text, health_value_to_set)
+end
+
+function update_ammo_ui(self, ammo_value_to_set)
+	-- Re-scale and re-position the ammobar as damage is taken, and update the ammo text to match the player's current ammo.
+	x_scale_mult = 0.008
+	ammobar_x_scale = ammo_value_to_set * x_scale_mult
+	ammobar_x_position = ammobar_positions[ammo_value_to_set].x
+
+	gui.set_scale(ammobar, vmath.vector3(ammobar_x_scale, 0.7, 0.2))
+	gui.set_position(ammobar, vmath.vector3(ammobar_x_position, starting_ammobar_position.y, starting_ammobar_position.z))
+	gui.set_text(ammo_text, ammo_value_to_set)
 end
 
 function play_ability_tap_animation(self, starting_state, tapped_state)

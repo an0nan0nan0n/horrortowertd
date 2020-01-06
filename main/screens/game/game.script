@@ -67,7 +67,7 @@ function on_message(self, message_id, message, sender)
 		if self.ammo >= 5 then
 		msg.post("/shoot_ability", "shoot", { spawn_position = message.spawn_position } )
 		self.ammo = self.ammo - 5
-		-- TODO: msg.post("/ui#player_ui", "update_ammo_ui", { ammo_value_to_set = self.ammo })
+		msg.post("/ui#player_ui", "update_ammo_ui", { ammo_value_to_set = self.ammo })
 		pprint('game.script: player lost 5 ammo from shooting, ammo remaining: ' .. self.ammo)
 		elseif self.ammo < 5 or self.ammo <= 0 then
 			pprint('game.script: player needs at least 5 ammo to cast shoot.')

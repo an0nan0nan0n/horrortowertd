@@ -37,6 +37,9 @@ images {
 images {
   image: "/gamelib/assets/sprites/low_health.png"
 }
+images {
+  image: "/gamelib/assets/sprites/ammobar_border.png"
+}
 margin: 0
 extrude_borders: 0
 inner_padding: 0
