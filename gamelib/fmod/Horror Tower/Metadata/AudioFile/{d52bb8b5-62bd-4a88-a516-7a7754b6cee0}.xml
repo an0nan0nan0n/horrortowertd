@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.00.00">
+	<object class="AudioFile" id="{d52bb8b5-62bd-4a88-a516-7a7754b6cee0}">
+		<property name="assetPath">
+			<value>Horror Tower/Abilities/Grenade/abilties_grenade_flesh_explo02.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>1</value>
+		</property>
+		<property name="length">
+			<value>2.6346712018140588</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{4c43130b-9186-4fb6-9d65-a9acdac70927}</destination>
+		</relationship>
+	</object>
+</objects>

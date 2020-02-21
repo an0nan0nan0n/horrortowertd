@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.00.00">
+	<object class="EncodableAsset" id="{3e7a3e33-522d-468a-95a1-db586de7155e}">
+		<property name="assetPath">
+			<value>Horror Tower/Enemies/Zombie/</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{4c43130b-9186-4fb6-9d65-a9acdac70927}</destination>
+		</relationship>
+	</object>
+</objects>
