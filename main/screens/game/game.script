@@ -5,9 +5,14 @@ go.property("health", 100)
 go.property("ammo", 100)
 go.property("gold", 1)
 go.property("tier", 1)
+go.property("zombie max health", 5)
+go.property("zombie damage", 10)
+go.property("zombie speed", 35)
 
 function init(self)
 	pprint("game.script: url is " .. msg.url())
+
+	-- Player game values.
 	self.health = go.get("/controller#game", "health")
 	self.ammo = go.get("/controller#game", "ammo")
 	self.gold = go.get("/controller#game", "gold")
@@ -18,16 +23,31 @@ function init(self)
 	pprint('game.script: ammo: ' .. self.ammo)
 	pprint('game.script: gold: ' .. self.gold)
 	pprint('game.script: tier: ' .. self.tier)
-	
-	-- Load FMOD sound banks.
-	-- msg.post("main:/fmod#fmod", "load_banks")
-	-- msg.post("main:/fmod#fmod", "intro_song")
+
+	-- Player debug options.
+	-- TODO: Remove in final version.
+	self.player_god_mode_enabled = false
+
+	-- Enemy game values.	
+	self.enemy_values = { 
+		zombie = { 
+			speed = go.get("/controller#game", "zombie speed"),
+			health = go.get("/controller#game", "zombie max health"),
+			damage = go.get("/controller#game", "zombie damage")
+		},
+	}
+	pprint('zombie max health is ' .. self.enemy_values.zombie.health)
+	pprint('zombie damage is ' .. self.enemy_values.zombie.damage)
+	pprint('zombie speed is ' .. self.enemy_values.zombie.speed)
+	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'speed', speed = self.enemy_values.zombie.speed })
+	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'health', speed = self.enemy_values.zombie.health })
+	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'damage', speed = self.enemy_values.zombie.damage })
 end
 
 function update(self)
 	-- Game update loop.
 	-- If the player ever reaches or drops below 0 health, kill them.
-	if self.health <= 0 then
+	if self.health <= 0 and self.player_god_mode_enabled == false then
 		msg.post("level_loader:/level_loader#script", "kill_player")
 	end
 end
@@ -36,19 +56,21 @@ function on_message(self, message_id, message, sender)
 	-- Message handler for game events.
 	-- Filter all actions through here.
 
-	-----------------------------
-	--- Begin main functions ---
-	-- i.e. kill, heal, damage --
-	-----------------------------
-	if message_id == hash("add_health") then
+	--------------------------------
+	---- Begin player functions ----
+	--- i.e. kill, heal, damage ----
+	--------------------------------
+	if message_id == hash("add_health") and self.player_god_mode_enabled == false then
 		self.health = self.health + message.health
 		msg.post("/ui#player_ui", "update_health_ui", { health_value_to_set = self.health })
 	end
-	if message_id == hash("subtract_health") then
+
+	if message_id == hash("subtract_health") and self.player_god_mode_enabled == false then
 		self.health = self.health - message.health
 		msg.post("/ui#player_ui", "update_health_ui", { health_value_to_set = self.health })
 	end
-	if message_id == hash("kill_player") then
+
+	if message_id == hash("kill_player") and self.player_god_mode_enabled == false then
 		msg.post("level_loader:/level_loader#script", "kill_player")
 	end
 
@@ -65,14 +87,45 @@ function on_message(self, message_id, message, sender)
 	-- Fires a shot at the location the player taps and deals damage while depleting ammo.
 	if message_id == hash("shoot") and self.current_ability == 'shoot' then
 		if self.ammo >= 5 then
-		msg.post("/shoot_ability", "shoot", { spawn_position = message.spawn_position } )
-		self.ammo = self.ammo - 5
-		msg.post("/ui#player_ui", "update_ammo_ui", { ammo_value_to_set = self.ammo })
-		pprint('game.script: player lost 5 ammo from shooting, ammo remaining: ' .. self.ammo)
+			msg.post("/shoot_ability", "shoot", { spawn_position = message.spawn_position } )
+			self.ammo = self.ammo - 5
+			msg.post("/ui#player_ui", "update_ammo_ui", { ammo_value_to_set = self.ammo })
+			pprint('game.script: player lost 5 ammo from shooting, ammo remaining: ' .. self.ammo)
 		elseif self.ammo < 5 or self.ammo <= 0 then
 			pprint('game.script: player needs at least 5 ammo to cast shoot.')
 		end
 	end
+
+	--------------------------------------
+	---- Begin enemy functions -----------
+	--- i.e. set health, damage, etc. ----
+	-------------------------------------
+	if message_id == hash("get_enemy_speed") then
+		if message.enemy == hash("zombie") then
+			return self.enemy_values.zombie.speed
+		end
+	end
+	if message_id == hash("get_enemy_health") then
+		if message.enemy == hash("zombie") then
+			return self.enemy_values.zombie.speed
+		end
+	end
+	if message_id == hash("get_enemy_damage") then
+		if message.enemy == hash("zombie") then
+			return self.enemy_values.zombie.speed
+		end
+	end
 end
+
+-- TODO: 
+-- function enable_god_mode(self)
+-- 	-- Makes the player unkillable, mainly used for debugging.
+-- 	self.player_god_mode_enabled = true
+-- end
+-- 
+-- function disable_god_mode(self)
+-- 	-- Makes the player unkillable, mainly used for debugging.
+-- 	self.player_god_mode_enabled = false
+-- end
 
 pprint('game.script: Successfully loaded.')

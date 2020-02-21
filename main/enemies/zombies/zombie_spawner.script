@@ -5,6 +5,7 @@ local zombie_spawn_limit = 10  -- Current spawn limit for zombies.
 
 function init(self)
 	pprint("zombie_spawner.script: url is " .. msg.url())
+	-- Values for the zombie_spawner to track.
 	self.current_spawn_side = 'left' -- First zombie spawns from the left.
 	self.spawn_sides = {'left', 'right'} -- Both spawn sides for use in update_current_spawn_side()
 	self.timeline_timer = 0  -- Used for the spawn timer formula in update()
@@ -13,11 +14,26 @@ function init(self)
 	self.zombies_spawned = 0  -- Tracks the total count of zombies spawned, regardless of side.
 	self.zombie_game_objects = {} -- Tracks spawned zombie game objects.
 	self.zombie_types = { 'zombie_a', 'zombie_b', 'zombie_c', 'zombie_d' }  -- Possible zombie game objects from the main/enemies/zombies folder.
+
+	-- Speed, max health, and damage dealt by spawned zombies.
+	self.zombie_health = 0
+	self.zombie_speed = 0
+	self.zombie_damage = 0
 end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("kill_zombie") then
 		go.delete(sender)
+	end
+
+	if message_id == hash("set_stat") then
+		if message.stat == "health" then
+			self.zombie_health = message.health
+		elseif message.stat == "speed" then
+			self.zombie_speed = message.speed
+		elseif message.stat == "damage" then
+			self.zombie_damage = message.damage
+		end
 	end
 end
 	
@@ -46,17 +62,28 @@ function spawn_zombie(self, zombie_type, spawn_position)
 	-- Also flips the sprite for the zombie based on the side it spawns from.
 	-- Tallies the newly created zombie sprite to the self.zombie_sprites table.
 	if zombie_type then
+		-- Make new zombie game object.
 		zombie_id = factory.create("/zombie_spawner#" .. zombie_type, spawn_position)
 		zombie_sprite_url = msg.url(nil, zombie_id, "sprite")
 		zombie_script_url = msg.url(nil, zombie_id, "script")
+
+		-- Store the spawned zombie in a table.
 		table.insert(self.zombie_game_objects, zombie_id)
+
+		-- Flip the sprite if it spawns from the right since default facing is left, then play its animations.
 		if self.current_spawn_side == 'right' then
 			sprite.set_hflip(zombie_sprite_url, true)
 		end
+
+		msg.post(zombie_script_url, 'set_stat', { stat = 'speed', speed = self.zombie_speed })
+		msg.post(zombie_script_url, 'set_stat', { stat = 'damage', damage = self.zombie_damage })
+		msg.post(zombie_script_url, 'set_stat', { stat = 'health', health = self.zombie_health })
 		msg.post(zombie_script_url, "set_move_direction", { direction=self.current_spawn_side })
 		msg.post(zombie_sprite_url, "play_animation", { id=hash("walk_forward") })
 		print('zombie_spawner.script: zombie spawned from ' .. self.current_spawn_side .. ' side.')
 	end
+
+	-- Update counts and spawn side for the next zombie if we spawn one again.
 	update_zombie_spawn_count(self)
 	update_current_spawn_side(self)
 end

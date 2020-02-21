@@ -2,7 +2,7 @@
 require "utility.helpers"
 
 function init(self)
-	ppprint("fmod.script url is " .. msg.url())
+	pprint("fmod.script url is " .. msg.url())
 	msg.post(".", "acquire_input_focus")
 	local bundle_path = sys.get_application_path() -- The path to your game's directory	
 	pprint('current bundle_resources dir is ' .. bundle_path)	
@@ -24,8 +24,9 @@ function update(self, dt)
 end
 
 function on_message(self, message_id, message, sender)
-	if self.event then
-		self.event:stop()
+
+	if message_id == hash("stop_event") then
+		message.event:stop()
 	end
 
 	-- Load soundbanks
@@ -38,34 +39,34 @@ function on_message(self, message_id, message, sender)
 
 	-- Replace with table in future from utility.constants.lua module.
 	if message_id == hash("intro_song") then
-		fmod_sound = "event:/Music/Level 02"
+		fmod_sound_event = "event:/Music/LavenderTown"
+		play_sound_event(self, fmod_sound_event)
 	end
 	if message_id == hash("level_1_song") then
-		fmod_sound = "event:/Music/Level 03"
-	end
-
-	-- Get events and start the events where needed.
-	-- Replace this so that the passed parameters populate it.
-	if fmod_sound then
-		local event_description = fmod.studio.system:get_event(fmod_sound)
-		local event = event_description:create_instance()
-		self.event = event
-		self.event:start()
-
-		-- Error handling example
-		local ok, err = pcall(function ()
-			fmod.studio.system:get_event(fmod_sound)
-		end)
-		if not ok then
-			pprint(err)
-			local code = fmod.error_code[err] -- The FMOD error code (a number).
-			pprint(code)
-			if code == fmod.ERR_EVENT_NOTFOUND then
-				pprint("Ooops! This event doesn't exist!")
-			end
-		end
+		fmod_sound_event = "event:/Music/Level 03"
+		play_sound_event(self, fmod_sound_event)
 	end
 end
+
+function play_sound_event(self, fmod_sound_event)
+	-- Get event match fmod_sound_event and play it.
+	event_description = fmod.studio.system:get_event(fmod_sound_event)
+	event = event_description:create_instance()
+	event:start()
+
+	-- Error handling.
+	local ok, err = pcall(function () fmod.studio.system:get_event(fmod_sound_event) end)
+
+	-- Print errors to console if any occur.
+	if not ok then
+		local code = fmod.error_code[err] -- The FMOD error code (a number).
+		pprint(err)
+		pprint(code)
+		if code == fmod.ERR_EVENT_NOTFOUND then
+			pprint("Ooops! This event doesn't exist!")
+		end
+	end
+end	
 
 function final(self)
 	msg.post(".", "release_input_focus")

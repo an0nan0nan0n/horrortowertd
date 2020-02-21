@@ -23,7 +23,11 @@ function init(self)
 	tierbar = gui.get_node("tierbar")
 	current_money = gui.get_node("current_money")
 	current_tier = gui.get_node("current_tier")
+
+	-- TODO: Once the debug menu gets big enough, split it into its own .gui object and .gui_script for it.
 	kill_button = gui.get_node("kill_button")
+	-- enable_god_mode = gui.get_node("enable_god_mode")
+	-- disable_god_mode = gui.get_node("disable_god_mode")
 
 	-- Hide GUI nodes with conditional toggles.
 	gui.set_enabled(tapped1, false)
@@ -39,9 +43,9 @@ function init(self)
 	ammobar_positions[100] = starting_ammobar_position
 
 	-- Index 100 is 100 health/ammo (full) so we loop 99 to 0 for the rest.
+	-- Create the healthbar and ammobar tables for tracking position using the for loop output:
 	for i=99,0,-1 do
-		x = (100 - i) * 2.2
-		-- print('x is ' .. x .. ' for i value: ' .. i)
+		x = (100 - i) * 2.2 -- 2.2 is the value to scale the positions as you see fit on the x axis.
 		healthbar_positions[i] = { x = healthbar_positions[100].x - x, y = healthbar_positions[100].y, z = healthbar_positions[100].z }
 		ammobar_positions[i] = { x = ammobar_positions[100].x - x, y = ammobar_positions[100].y, z = ammobar_positions[100].z }
 	end
