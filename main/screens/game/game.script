@@ -40,8 +40,8 @@ function init(self)
 	pprint('zombie damage is ' .. self.enemy_values.zombie.damage)
 	pprint('zombie speed is ' .. self.enemy_values.zombie.speed)
 	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'speed', speed = self.enemy_values.zombie.speed })
-	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'health', speed = self.enemy_values.zombie.health })
-	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'damage', speed = self.enemy_values.zombie.damage })
+	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'health', health = self.enemy_values.zombie.health })
+	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'damage', damage = self.enemy_values.zombie.damage })
 end
 
 function update(self)

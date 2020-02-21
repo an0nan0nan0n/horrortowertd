@@ -50,6 +50,7 @@ function on_message(self, message_id, message, sender)
 			self.zombie_speed = message.speed
 			directions = { left = math.abs(self.zombie_speed), right = math.abs(self.zombie_speed) * -1}
 		elseif message.stat == "damage" then
+			print('DAMAGE IS ' .. message.damage)
 			self.zombie_damage = message.damage
 		end
 	end
@@ -58,13 +59,11 @@ end
 function damage_player(self)
 	-- Utilizes a timer.delay() and loop_damage() callback function to deal damage to the player until the zombie dies.
 	msg.post("/controller#game", "subtract_health", { health = self.zombie_damage }) -- In the future, used the playing of an attack animation to deal this damage.
-	print("zombie.script: zombie dealt " .. self.zombie_damage .. " damage to the player.")
 	timer.delay(2, true, function(self, handle, time_elapsed) loop_damage(self) end)
 
 	-- The callback function for the timer.delay() to execute after it is finished delaying.
 	-- Calls the source function again infinitely until the zombie dies.
 	function loop_damage(self)
-		pprint("zombie.script: " .. self.zombie_damage .. " damage would get looped here")
 		damage_player(self)
 	end
 end
