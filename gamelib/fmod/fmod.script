@@ -20,9 +20,6 @@ function init(self)
 	end
 end
 
-function update(self, dt)
-end
-
 function on_message(self, message_id, message, sender)
 
 	if message_id == hash("stop_event") then
@@ -34,16 +31,23 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("load_banks") then
 		fmod.studio.system:load_bank_memory(resource.load('/gamelib/fmod/banks/Master.bank'), fmod.STUDIO_LOAD_BANK_NORMAL)
 		fmod.studio.system:load_bank_memory(resource.load('/gamelib/fmod/banks/Master.strings.bank'), fmod.STUDIO_LOAD_BANK_NORMAL)
-		fmod.studio.system:load_bank_memory(resource.load('/gamelib/fmod/banks/Music.bank'), fmod.STUDIO_LOAD_BANK_NORMAL)
+		fmod.studio.system:load_bank_memory(resource.load('/gamelib/fmod/banks/SFX.bank'), fmod.STUDIO_LOAD_BANK_NORMAL)
 	end
 
 	-- Replace with table in future from utility.constants.lua module.
 	if message_id == hash("intro_song") then
-		fmod_sound_event = "event:/Music/LavenderTown"
-		play_sound_event(self, fmod_sound_event)
+		print('Add intro song event here')
 	end
 	if message_id == hash("level_1_song") then
 		fmod_sound_event = "event:/Music/Level 03"
+		play_sound_event(self, fmod_sound_event)
+	end
+	if message_id == hash("play_pistol_fire") then
+		fmod_sound_event = "event:/Abilities/Pistol/pistol_fire"
+		play_sound_event(self, fmod_sound_event)
+	end
+	if message_id == hash("play_pistol_empty") then
+		fmod_sound_event = "event:/Abilities/Pistol/pistol_empty"
 		play_sound_event(self, fmod_sound_event)
 	end
 end

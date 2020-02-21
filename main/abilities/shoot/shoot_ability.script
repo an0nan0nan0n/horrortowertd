@@ -27,6 +27,7 @@ function shoot(self, shot_type, spawn_position)
 	-- Player cannot cast shoot again until after this delay.
 	if self.shot_currently_active == false then -- If not shot is spawned already, then shoot
 		pprint('shoot_ability.script: shooting at position: ' .. spawn_position)
+		msg.post("/fmod#fmod", "play_pistol_fire")
 		shot = factory.create("/shoot_ability#" .. shot_type, spawn_position, nil, nil, vmath.vector3(0.4, 0.35, 1))
 		self.shot_currently_active = true
 		timer.delay(delay_between_shots, false, function(self, handle, time_elapsed) delete_shot(self, shot) end)
