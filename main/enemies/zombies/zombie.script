@@ -3,43 +3,59 @@ function init(self)
 	self.direction = 0
 	self.velocity = vmath.vector3(0, 0, 0)
 	self.reached_destination = false
+	self.dealing_damage = false
+	self.spawn_side = nil
 
 	self.zombie_health = 0
 	self.zombie_speed = 0
 	self.zombie_damage = 0
+	self.zombie_damage_delay = 0
 	
 	pprint("zombie.script: url is " .. msg.url())
 end
 
 function update(self, dt)
-	-- Move every game update.
-	if self.reached_destination == false then
+	if self.reached_destination == false then  -- Move every game update.
 		-- TODO: Could this formula be improved?
 		self.pos = self.pos + self.velocity * dt
 		go.set_position(self.pos)
+	elseif self.reached_destination == true and self.dealing_damage == false then -- Spawn the attack game object and deal damage.
+		start_zombie_attack(self)
 	end
 end
 
 function on_message(self, message_id, message, sender)
 	-- Stop moving when we hit the tower collision.
-	-- Start dealing damage to the player until the zombie dies.
 	if message_id == hash("collision_response") and message.group == hash("environment") then
-		if self.reached_destination == false then
-			damage_player(self)
-		end
 		self.reached_destination = true
+		-- Without this off-set adjustment, collision_response won't register for zombie_attack game objects.
+		if self.spawn_side == 'left' then
+			self.x_adjustment = self.pos.x - 2
+		elseif self.spawn_side == 'right' then
+			self.x_adjustment = self.pos.x + 2
+			go.set_position(vmath.vector3(self.x_adjustment, self.pos.y, self.pos.z))
+		end
+	elseif message_id == hash("collision_response") and message.group == hash("ability") then
+		local ability_url = msg.url(message.other_id)
+		ability_url.fragment = "script"
+		local damage = go.get(ability_url, "damage")
+		msg.post(".", "subtract_health", { health = damage })
 	end
-	
+
 	if message_id == hash('set_move_direction') then
 		self.direction = directions[message.direction]
 		self.velocity = vmath.vector3(self.direction, 0, 0)
 	end
 
 	if message_id == hash("subtract_health") then
-		self.zombie_health = self.zombie_health - message.zombie_health
+		self.zombie_health = self.zombie_health - message.health
 		if self.zombie_health <= 0 then
-			pprint("i should die")
+			kill_zombie(self)
 		end
+	end
+
+	if message_id == hash("zombie_damages_player") then
+		zombie_damages_player(self)
 	end
 
 	-- Stat setters
@@ -50,20 +66,43 @@ function on_message(self, message_id, message, sender)
 			self.zombie_speed = message.speed
 			directions = { left = math.abs(self.zombie_speed), right = math.abs(self.zombie_speed) * -1}
 		elseif message.stat == "damage" then
-			print('DAMAGE IS ' .. message.damage)
 			self.zombie_damage = message.damage
+		elseif message.stat == "spawn_side" then
+			self.spawn_side = message.spawn_side
+		elseif message.stat == "damage_delay" then
+			self.zombie_damage_delay = message.damage_delay
+		elseif message.stat == "dealing_damage" then
+			self.dealing_damage = true
 		end
 	end
 end
 
-function damage_player(self)
-	-- Utilizes a timer.delay() and loop_damage() callback function to deal damage to the player until the zombie dies.
-	msg.post("/controller#game", "subtract_health", { health = self.zombie_damage }) -- In the future, used the playing of an attack animation to deal this damage.
-	timer.delay(2, true, function(self, handle, time_elapsed) loop_damage(self) end)
-
-	-- The callback function for the timer.delay() to execute after it is finished delaying.
-	-- Calls the source function again infinitely until the zombie dies.
-	function loop_damage(self)
-		damage_player(self)
+function start_zombie_attack(self)
+	-- Spawns a zombie_attack game object from the zombie_attack factory to attack the player.
+	pprint('zombie.script: spawning zombie_attack ')
+	self.dealing_damage = true
+	local starting_pos = go.get_position()
+	if self.spawn_side == 'left' then
+		starting_x = starting_pos.x - 20
+		ending_x = starting_pos.x + 5
+	elseif self.spawn_side == 'right' then
+		starting_x = starting_pos.x + 20
+		ending_x = starting_pos.x - 5
 	end
+	zombie_attack_id = factory.create("/zombie_spawner#" .. "zombie_attack", vmath.vector3(starting_x, starting_pos.y, starting_pos.z))
+	zombie_attack_script_url = msg.url(nil, zombie_attack_id, "script")
+	msg.post(zombie_attack_script_url, "set_parent_game_object", { parent=msg.url() })
+	go.animate(zombie_attack_id, "position.x", go.PLAYBACK_ONCE_FORWARD, ending_x, go.EASING_LINEAR, self.zombie_damage_delay)
+end
+
+function zombie_damages_player(self)
+	msg.post("/controller#game", "subtract_health", { health = self.zombie_damage })
+	self.dealing_damage = false
+	print('zombie.script: dealt ' .. self.zombie_damage .. ' damage to player')
+end
+
+function kill_zombie(self)
+	-- Kills the zombie.
+	msg.post("/zombie_spawner#zombie_spawner", "delete_zombie", { zombie_id = go.get_id() })
+	go.delete()
 end

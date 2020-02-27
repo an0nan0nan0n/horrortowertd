@@ -38,10 +38,6 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("intro_song") then
 		print('Add intro song event here')
 	end
-	if message_id == hash("level_1_song") then
-		fmod_sound_event = "event:/Music/Level 03"
-		play_sound_event(self, fmod_sound_event)
-	end
 	if message_id == hash("play_pistol_fire") then
 		fmod_sound_event = "event:/Abilities/Pistol/pistol_fire"
 		play_sound_event(self, fmod_sound_event)
@@ -50,6 +46,22 @@ function on_message(self, message_id, message, sender)
 		fmod_sound_event = "event:/Abilities/Pistol/pistol_empty"
 		play_sound_event(self, fmod_sound_event)
 	end
+	if message_id == hash("play_you_are_dead") then
+		fmod_sound_event = "event:/Ambience/you_are_dead"
+		play_sound_event(self, fmod_sound_event)
+	end
+	if message_id == hash("stop_you_are_dead") then
+		fmod_sound_event = "event:/Ambience/you_are_dead"
+		stop_sound_event(self, fmod_sound_event)
+	end
+	if message_id == hash("play_city") then
+		fmod_sound_event = "event:/Ambience/city"
+		play_sound_event(self, fmod_sound_event)
+	end
+	if message_id == hash("stop_city") then
+		fmod_sound_event = "event:/Ambience/city"
+		stop_sound_event(self, fmod_sound_event)
+	end
 end
 
 function play_sound_event(self, fmod_sound_event)
@@ -57,6 +69,26 @@ function play_sound_event(self, fmod_sound_event)
 	event_description = fmod.studio.system:get_event(fmod_sound_event)
 	event = event_description:create_instance()
 	event:start()
+
+	-- Error handling.
+	local ok, err = pcall(function () fmod.studio.system:get_event(fmod_sound_event) end)
+
+	-- Print errors to console if any occur.
+	if not ok then
+		local code = fmod.error_code[err] -- The FMOD error code (a number).
+		pprint(err)
+		pprint(code)
+		if code == fmod.ERR_EVENT_NOTFOUND then
+			pprint("Ooops! This event doesn't exist!")
+		end
+	end
+end	
+
+function stop_sound_event(self, fmod_sound_event)
+	-- Get event match fmod_sound_event and stop it.
+	event_description = fmod.studio.system:get_event(fmod_sound_event)
+	event_list = fmod.studio.system.get_instance_list()
+	event:stop(FMOD_STUDIO_STOP_ALLOWFADEOUT)
 
 	-- Error handling.
 	local ok, err = pcall(function () fmod.studio.system:get_event(fmod_sound_event) end)

@@ -5,9 +5,12 @@ go.property("health", 100)
 go.property("ammo", 100)
 go.property("gold", 1)
 go.property("tier", 1)
+go.property("zombie spawn delay", 2)
 go.property("zombie max health", 5)
 go.property("zombie damage", 10)
+go.property("zombie damage delay", 5)
 go.property("zombie speed", 35)
+go.property("shoot damage", 5)
 
 function init(self)
 	pprint("game.script: url is " .. msg.url())
@@ -18,11 +21,6 @@ function init(self)
 	self.gold = go.get("/controller#game", "gold")
 	self.tier = go.get("/controller#game", "tier")
 	self.current_ability = nil
-	pprint('game.script: initialized.')
-	pprint('game.script: health: ' .. self.health)
-	pprint('game.script: ammo: ' .. self.ammo)
-	pprint('game.script: gold: ' .. self.gold)
-	pprint('game.script: tier: ' .. self.tier)
 
 	-- Player debug options.
 	-- TODO: Remove in final version.
@@ -30,18 +28,19 @@ function init(self)
 
 	-- Enemy game values.	
 	self.enemy_values = { 
-		zombie = { 
+		zombie = {
+			spawn_delay = go.get("/controller#game", "zombie spawn delay"),
 			speed = go.get("/controller#game", "zombie speed"),
 			health = go.get("/controller#game", "zombie max health"),
-			damage = go.get("/controller#game", "zombie damage")
+			damage = go.get("/controller#game", "zombie damage"),
+			damage_delay = go.get("/controller#game", "zombie damage delay")
 		},
 	}
-	pprint('zombie max health is ' .. self.enemy_values.zombie.health)
-	pprint('zombie damage is ' .. self.enemy_values.zombie.damage)
-	pprint('zombie speed is ' .. self.enemy_values.zombie.speed)
+	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'spawn_delay', spawn_delay = self.enemy_values.zombie.spawn_delay })
 	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'speed', speed = self.enemy_values.zombie.speed })
 	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'health', health = self.enemy_values.zombie.health })
 	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'damage', damage = self.enemy_values.zombie.damage })
+	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'damage_delay', damage_delay = self.enemy_values.zombie.damage_delay })
 end
 
 function update(self)
@@ -74,9 +73,9 @@ function on_message(self, message_id, message, sender)
 		msg.post("level_loader:/level_loader#script", "kill_player")
 	end
 
-	---------------------
-	-- Begin abilities --
-	---------------------
+	----------------------------
+	-- Begin player abilities --
+	----------------------------
 	if message_id == hash("set_ability") then
 		-- Select the current player ability based on the UI ability button tapped.
 		self.current_ability = message.ability
@@ -93,26 +92,6 @@ function on_message(self, message_id, message, sender)
 			pprint('game.script: player lost 5 ammo from shooting, ammo remaining: ' .. self.ammo)
 		elseif self.ammo < 5 or self.ammo <= 0 then
 			msg.post("/fmod#fmod", "play_pistol_empty")
-		end
-	end
-
-	--------------------------------------
-	---- Begin enemy functions -----------
-	--- i.e. set health, damage, etc. ----
-	-------------------------------------
-	if message_id == hash("get_enemy_speed") then
-		if message.enemy == hash("zombie") then
-			return self.enemy_values.zombie.speed
-		end
-	end
-	if message_id == hash("get_enemy_health") then
-		if message.enemy == hash("zombie") then
-			return self.enemy_values.zombie.speed
-		end
-	end
-	if message_id == hash("get_enemy_damage") then
-		if message.enemy == hash("zombie") then
-			return self.enemy_values.zombie.speed
 		end
 	end
 end

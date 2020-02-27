@@ -1,6 +1,10 @@
 pprint('player_ui.gui_script: Loading player UI')
 
 function init(self)
+	-- Start the FMOD ambience.
+	msg.post("/fmod#fmod", "stop_you_are_dead")
+	msg.post("/fmod#fmod", "play_city")
+
 	-- Initialize and set variables
 	script_url = msg.url()
 	pprint("player_ui.gui_script: script url is " .. script_url)

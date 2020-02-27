@@ -1,0 +1,5 @@
+go.property("damage", 5)
+
+function init(self)
+	pprint("shoot_damage.script: url is " .. msg.url())
+end

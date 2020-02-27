@@ -19,13 +19,11 @@ function init(self)
 	self.zombie_health = 0
 	self.zombie_speed = 0
 	self.zombie_damage = 0
+	self.zombie_damage_delay = 0
+	self.zombie_spawn_delay = 0
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("kill_zombie") then
-		go.delete(sender)
-	end
-
 	if message_id == hash("set_stat") then
 		if message.stat == "health" then
 			self.zombie_health = message.health
@@ -33,27 +31,38 @@ function on_message(self, message_id, message, sender)
 			self.zombie_speed = message.speed
 		elseif message.stat == "damage" then
 			self.zombie_damage = message.damage
+		elseif message.stat == "damage_delay" then
+			self.zombie_damage_delay = message.damage_delay
+		elseif message.stat == "spawn_delay" then
+			self.zombie_spawn_delay = message.spawn_delay
+		end
+	end
+
+	if message_id == hash("delete_zombie") then
+		print(dump(self.zombie_game_objects))
+		for key, zombie_id in pairs(self.zombie_game_objects) do
+			if zombie_id == message.zombie_id then
+				table.remove(self.zombie_game_objects, key)
+				self.zombies_spawned = self.zombies_spawned - 1
+			end
 		end
 	end
 end
 	
 function update(self, dt)
 	-- TODO: Update spawn timer formula.
-	self.timeline_timer = self.timeline_timer + dt
-	spawn_delay = math.random(2, 5)
+	if self.zombie_spawn_delay ~= nil then
+		self.timeline_timer = self.timeline_timer + dt
+		local spawn_delay = math.random(self.zombie_spawn_delay, self.zombie_spawn_delay + 3)
 
-	-- If the spawn delay is less than or equal to the spawn timer,
-	-- & the current zombies spawned are not equal the zombie spawn limit, spawn a new zombie.
-	if spawn_delay <= self.timeline_timer and zombie_spawn_limit ~= self.zombies_spawned then
-		zombie_type = self.zombie_types[math.random(1, len(self.zombie_types))]
-		spawn_position = go.get_position(spawn_positions[self.current_spawn_side])
-		spawn_zombie(self, zombie_type, spawn_position)
-		self.timeline_timer = 0
-	end
-
-	for k, v in pairs(self.zombie_game_objects) do
-		-- TODO: Kill zombies with 0 health.
-		-- print(k, v)
+		-- If the spawn delay is less than or equal to the spawn timer,
+		-- & the current zombies spawned are not equal to the zombie spawn limit, spawn a new zombie.
+		if spawn_delay <= self.timeline_timer and zombie_spawn_limit ~= self.zombies_spawned then
+			zombie_type = self.zombie_types[math.random(1, len(self.zombie_types))]
+			spawn_position = go.get_position(spawn_positions[self.current_spawn_side])
+			spawn_zombie(self, zombie_type, spawn_position)
+			self.timeline_timer = 0
+		end
 	end
 end
 
@@ -61,7 +70,7 @@ function spawn_zombie(self, zombie_type, spawn_position)
 	-- Spawns a zombie, calls the update functions for counts and spawn sides for the next zombie.
 	-- Also flips the sprite for the zombie based on the side it spawns from.
 	-- Tallies the newly created zombie sprite to the self.zombie_sprites table.
-	if zombie_type then
+	if zombie_type ~= nil then
 		-- Make new zombie game object.
 		zombie_id = factory.create("/zombie_spawner#" .. zombie_type, spawn_position)
 		zombie_sprite_url = msg.url(nil, zombie_id, "sprite")
@@ -77,7 +86,9 @@ function spawn_zombie(self, zombie_type, spawn_position)
 
 		msg.post(zombie_script_url, 'set_stat', { stat = 'speed', speed = self.zombie_speed })
 		msg.post(zombie_script_url, 'set_stat', { stat = 'damage', damage = self.zombie_damage })
+		msg.post(zombie_script_url, 'set_stat', { stat = 'damage_delay', damage_delay = self.zombie_damage_delay })
 		msg.post(zombie_script_url, 'set_stat', { stat = 'health', health = self.zombie_health })
+		msg.post(zombie_script_url, 'set_stat', { stat = 'spawn_side', spawn_side = self.current_spawn_side })
 		msg.post(zombie_script_url, "set_move_direction", { direction=self.current_spawn_side })
 		msg.post(zombie_sprite_url, "play_animation", { id=hash("walk_forward") })
 		print('zombie_spawner.script: zombie spawned from ' .. self.current_spawn_side .. ' side.')

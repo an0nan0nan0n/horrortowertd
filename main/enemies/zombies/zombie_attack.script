@@ -1,0 +1,22 @@
+function init(self)
+	-- Damage is dealt by zombie.script, this is just for making the attack have and object + delay.
+	self.url = msg.url()
+	pprint("zombie_attack.script: url is " .. self.url)
+	self.parent_game_object = nil
+end
+
+function final(self)
+	pprint("zombie_attack.script: attack finished for: " .. self.url)
+end
+
+function on_message(self, message_id, message, sender)
+
+	if message_id == hash("set_parent_game_object") then
+		self.parent_game_object = message.parent
+	end
+
+	if message_id == hash("collision_response") and message.group == hash("environment") then
+		msg.post(self.parent_game_object, "zombie_damages_player")
+		go.delete()
+	end
+end
