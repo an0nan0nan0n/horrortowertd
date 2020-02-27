@@ -40,6 +40,9 @@ images {
 images {
   image: "/gamelib/assets/sprites/ammobar_border.png"
 }
+images {
+  image: "/gamelib/assets/sprites/reload_raw.png"
+}
 margin: 0
 extrude_borders: 0
 inner_padding: 0

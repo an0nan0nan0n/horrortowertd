@@ -22,6 +22,10 @@ function init(self)
 	self.tier = go.get("/controller#game", "tier")
 	self.current_ability = nil
 
+	-- Set UI starting values.
+	msg.post("/ui#player_ui", "set_stat", { stat = 'health', health = self.health })
+	msg.post("/ui#player_ui", "set_stat", { stat = 'ammo', ammo = self.ammo })
+
 	-- Player debug options.
 	-- TODO: Remove in final version.
 	self.player_god_mode_enabled = false
@@ -66,7 +70,21 @@ function on_message(self, message_id, message, sender)
 
 	if message_id == hash("subtract_health") and self.player_god_mode_enabled == false then
 		self.health = self.health - message.health
+		if self.health > 100 then
+			self.health = 100
+		end
 		msg.post("/ui#player_ui", "update_health_ui", { health_value_to_set = self.health })
+	end
+
+	if message_id == hash("reload_activated") and self.ammo <= 99 then
+		self.ammo = self.ammo + message.ammo
+		if self.ammo > 100 then
+			self.ammo = 100
+		end
+		msg.post("/ui#player_ui", "update_ammo_ui", { ammo_value_to_set = self.ammo })
+		timer.delay(10, true, function(self, handle, time_elapsed)
+			msg.post("/ui#player_ui", "reload_ready")
+		end)
 	end
 
 	if message_id == hash("kill_player") and self.player_god_mode_enabled == false then

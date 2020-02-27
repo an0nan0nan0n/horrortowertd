@@ -10,6 +10,8 @@ function init(self)
 	pprint("player_ui.gui_script: script url is " .. script_url)
 	msg.post(".", "acquire_input_focus")
 	self.current_ability = nil -- This updates from the same attribute in game.script
+	self.ammo = 0 -- This updates from the same attribute in game.script
+	self.health = 0 -- This updates from the same attribute in game.script
 
 	-- Load GUI nodes.
 	healthbar = gui.get_node("healthbar")
@@ -27,6 +29,9 @@ function init(self)
 	tierbar = gui.get_node("tierbar")
 	current_money = gui.get_node("current_money")
 	current_tier = gui.get_node("current_tier")
+	reload = gui.get_node("reload")
+	reload_cooldown = gui.get_node("reload_cooldown")
+	gui.set_text(reload_cooldown, "ready")
 
 	-- TODO: Once the debug menu gets big enough, split it into its own .gui object and .gui_script for it.
 	kill_button = gui.get_node("kill_button")
@@ -74,6 +79,19 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("set_ability") then
 		set_ability(self, message.ability)
 	end
+
+	if message_id == hash("reload_ready") then
+		gui.set_text(reload_cooldown, "ready")
+	end
+
+	-- Stat setters
+	if message_id == hash("set_stat") then
+		if message.stat == "health" then
+			self.health = message.health
+		elseif message.stat == "ammo" then
+			self.ammo = message.ammo
+		end
+	end
 end
 
 function on_input(self, action_id, action)
@@ -102,6 +120,10 @@ function on_input(self, action_id, action)
 			print('player_ui.gui_script: ability3 tapped')
 			enable_tapped_ability_icon(self, tapped3)
 		end
+		if gui.pick_node(reload, action.x, action.y) and gui.get_text(reload_cooldown) == 'ready' and self.ammo <= 99 then
+			gui.set_text(reload_cooldown, 'not ready')
+			msg.post("/controller#game", "reload_activated", { ammo = 50 })
+		end
 
 		-- This isn't used, but left here as a reference for if we want button tap functionality on some abilities.
 		-- play_ability_tap_animation(self, 'ability1', 'tapped1')
@@ -120,6 +142,7 @@ end
 
 function update_health_ui(self, health_value_to_set)
 	-- Re-scale and re-position the healthbar as damage is taken, and update the health text to match the player's current health.
+	self.health = health_value_to_set
 	x_scale_mult = 0.008
 	healthbar_x_scale = health_value_to_set * x_scale_mult
 	healthbar_x_position = healthbar_positions[health_value_to_set].x
@@ -131,6 +154,7 @@ end
 
 function update_ammo_ui(self, ammo_value_to_set)
 	-- Re-scale and re-position the ammobar as damage is taken, and update the ammo text to match the player's current ammo.
+	self.ammo = ammo_value_to_set
 	x_scale_mult = 0.008
 	ammobar_x_scale = ammo_value_to_set * x_scale_mult
 	ammobar_x_position = ammobar_positions[ammo_value_to_set].x
