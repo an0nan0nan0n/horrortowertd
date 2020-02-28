@@ -25,6 +25,7 @@ function init(self)
 	ability3 = gui.get_node("ability3")
 	tapped3 = gui.get_node("tapped3")
 	ability_selector = gui.get_node("ability_selector")
+	ability_area = gui.get_node('ability_area')
 	moneybar = gui.get_node("moneybar")
 	tierbar = gui.get_node("tierbar")
 	current_money = gui.get_node("current_money")
@@ -96,8 +97,8 @@ end
 
 function on_input(self, action_id, action)
 	if action_id == hash("touch") and action.pressed then
-		if self.current_ability == 'shoot' then
-			msg.post("/controller#game", "shoot", { spawn_position = vmath.vector3(action.screen_x, action.screen_y, 0.3)})
+		if self.current_ability == 'shoot' and gui.pick_node(ability_area, action.x, action.y) then
+			msg.post("/controller#game", "shoot", { spawn_position = vmath.vector3(action.x, action.y, 0.3)})
 		end
 		-- Ability buttons.
 		-- TODO: Remove hard-coded values, replace with a table or list to reference from.
