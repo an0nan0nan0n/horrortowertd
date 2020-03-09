@@ -13,7 +13,7 @@ lib_path = gamelib/fmod/res/
 [physics]
 gravity_z = 1.0
 gravity_y = 0.0
-debug = 0
+debug = 1
 
 [bootstrap]
 main_collection = /main/level_loader.collectionc

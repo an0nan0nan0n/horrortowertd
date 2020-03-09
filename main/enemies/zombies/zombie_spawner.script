@@ -1,6 +1,6 @@
 helpers = require("utility.helpers") -- imports dump() & len() functions
 
-local spawn_positions = { left = '/left_spawn', right = '/right_spawn' }
+local zombie_spawn_positions = { left = '/left_spawn', right = '/right_spawn' }
 local zombie_spawn_limit = 10  -- Current spawn limit for zombies.
 
 function init(self)
@@ -48,25 +48,31 @@ function on_message(self, message_id, message, sender)
 		end
 	end
 end
-	
-function update(self, dt)
-	-- TODO: Update spawn timer formula.
-	if self.zombie_spawn_delay ~= nil then
-		self.timeline_timer = self.timeline_timer + dt
-		local spawn_delay = math.random(self.zombie_spawn_delay, self.zombie_spawn_delay + 3)
 
-		-- If the spawn delay is less than or equal to the spawn timer,
-		-- & the current zombies spawned are not equal to the zombie spawn limit, spawn a new zombie.
-		if spawn_delay <= self.timeline_timer and zombie_spawn_limit ~= self.zombies_spawned then
-			zombie_type = self.zombie_types[math.random(1, len(self.zombie_types))]
-			spawn_position = go.get_position(spawn_positions[self.current_spawn_side])
-			spawn_zombie(self, zombie_type, spawn_position)
-			self.timeline_timer = 0
-		end
+local function update_zombie_spawn_count(self)
+	-- Tracks how many zombies are spawned total and logs to self.zombies_spawned.
+	if self.current_spawn_side == 'left' then
+		self.zombie_left_spawns = self.zombie_left_spawns + 1
+	elseif self.current_spawn_side == 'right' then
+		self.zombie_right_spawns = self.zombie_right_spawns + 1
 	end
+	self.zombies_spawned = self.zombies_spawned + 1
 end
 
-function spawn_zombie(self, zombie_type, spawn_position)
+local function update_current_spawn_side(self)
+	-- Changes the side for zombies to spawn from, based on the amount of zombies on each side.
+	if self.zombie_left_spawns > self.zombie_right_spawns then
+		new_side = self.spawn_sides[2]  -- right side
+	elseif self.zombie_right_spawns > self.zombie_left_spawns then
+		new_side = self.spawn_sides[1]  -- left side
+	else
+		new_side = self.spawn_sides[math.random(1, len(self.spawn_sides))]
+	end
+	self.current_spawn_side = new_side
+end
+
+
+local function spawn_zombie(self, zombie_type, spawn_position)
 	-- Spawns a zombie, calls the update functions for counts and spawn sides for the next zombie.
 	-- Also flips the sprite for the zombie based on the side it spawns from.
 	-- Tallies the newly created zombie sprite to the self.zombie_sprites table.
@@ -99,24 +105,19 @@ function spawn_zombie(self, zombie_type, spawn_position)
 	update_current_spawn_side(self)
 end
 
-function update_zombie_spawn_count(self)
-	-- Tracks how many zombies are spawned total and logs to self.zombies_spawned.
-	if self.current_spawn_side == 'left' then
-		self.zombie_left_spawns = self.zombie_left_spawns + 1
-	elseif self.current_spawn_side == 'right' then
-		self.zombie_right_spawns = self.zombie_right_spawns + 1
-	end
-	self.zombies_spawned = self.zombies_spawned + 1
-end
+function update(self, dt)
+	-- TODO: Update spawn timer formula.
+	if self.zombie_spawn_delay ~= nil then
+		self.timeline_timer = self.timeline_timer + dt
+		local spawn_delay = math.random(self.zombie_spawn_delay, self.zombie_spawn_delay + 3)
 
-function update_current_spawn_side(self)
-	-- Changes the side for zombies to spawn from, based on the amount of zombies on each side.
-	if self.zombie_left_spawns > self.zombie_right_spawns then
-		new_side = self.spawn_sides[2]  -- right side
-	elseif self.zombie_right_spawns > self.zombie_left_spawns then
-		new_side = self.spawn_sides[1]  -- left side
-	else
-		new_side = self.spawn_sides[math.random(1, len(self.spawn_sides))]
+		-- If the spawn delay is less than or equal to the spawn timer,
+		-- & the current zombies spawned are not equal to the zombie spawn limit, spawn a new zombie.
+		if spawn_delay <= self.timeline_timer and zombie_spawn_limit ~= self.zombies_spawned then
+			zombie_type = self.zombie_types[math.random(1, len(self.zombie_types))]
+			spawn_position = go.get_position(zombie_spawn_positions[self.current_spawn_side])
+			spawn_zombie(self, zombie_type, spawn_position)
+			self.timeline_timer = 0
+		end
 	end
-	self.current_spawn_side = new_side
 end

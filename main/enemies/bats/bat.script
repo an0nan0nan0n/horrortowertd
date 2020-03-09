@@ -1,0 +1,111 @@
+local bat_spawn_positions = { left = '/left_spawn_upper', right = '/right_spawn_upper' }
+
+function init(self)
+	self.center = go.get_position(bat_spawn_positions.left)
+	self.radius = 100
+	self.time = 0
+	self.reached_destination = false
+	self.dealing_damage = false
+	self.spawn_side = nil
+	self.spawn_position = nil
+	self.pos = nil
+
+	self.bat_health = 0
+	self.bat_speed = 0
+	self.bat_damage = 0
+	self.bat_damage_delay = 0
+
+	pprint("bat.script: url is " .. msg.url())
+end
+
+local function start_bat_attack(self)
+	-- Spawns a zombie_attack game object from the zombie_attack factory to attack the player.
+	-- TODO: Condense into one "enemy" script and add both of these attacks as a "basic" attack.
+	-- Github ticket: https://github.com/NoktyNx/horrortowertd/issues/7
+	pprint('bat.script: spawning zombie_attack - will be updated to a enemy "basic" attack all enemies use in the future.')
+	self.dealing_damage = true
+	local starting_pos = go.get_position()
+	starting_y = starting_pos.y + 1
+	ending_y = starting_pos.y - 5
+	bat_attack_id = factory.create("/zombie_spawner#" .. "zombie_attack", vmath.vector3(starting_pos.x, starting_y, starting_pos.z))
+	bat_attack_script_url = msg.url(nil, bat_attack_id, "script")
+
+	msg.post(bat_attack_script_url, "set_parent_game_object", { parent=msg.url() })
+	go.animate(bat_attack_id, "position.y", go.PLAYBACK_ONCE_FORWARD, ending_y, go.EASING_LINEAR, self.bat_damage_delay)
+end
+
+local function zombie_damages_player(self)
+	-- TODO: Condense into one "enemy" script and add both of these attacks as a "basic" attack.
+	-- Github ticket: https://github.com/NoktyNx/horrortowertd/issues/7
+	msg.post("/controller#game", "subtract_health", { health = self.bat_damage })
+	self.dealing_damage = false
+	print('bat.script: dealt ' .. self.bat_damage .. ' damage to player')
+end
+
+local function kill_bat(self)
+	-- Kills the bat.
+	msg.post("/bat_spawner#bat_spawner", "delete_bat", { bat_id = go.get_id() })
+	go.delete()
+end
+
+function update(self, dt)
+	if self.reached_destination == false then
+		self.pos = go.get_position()
+	elseif self.reached_destination == true and self.dealing_damage == false then
+		self.pos = go.get_position()
+		start_bat_attack(self)
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	-- Stop moving when we hit the tower collision.
+	if message_id == hash("collision_response") and message.group == hash("environment") then
+		self.reached_destination = true
+		-- Without this off-set adjustment, collision_response won't register for bat_attack game objects.
+		if self.spawn_side == 'left' then
+			self.x_adjustment = self.pos.x - 2
+		elseif self.spawn_side == 'right' then
+			self.x_adjustment = self.pos.x + 2
+			go.set_position(vmath.vector3(self.x_adjustment, self.pos.y, self.pos.z))
+		end
+	elseif message_id == hash("collision_response") and message.group == hash("ability") then
+		local ability_url = msg.url(message.other_id)
+		ability_url.fragment = "script"
+		local damage = go.get(ability_url, "damage")
+		msg.post(".", "subtract_health", { health = damage })
+	end
+
+	if message_id == hash("subtract_health") then
+		self.bat_health = self.bat_health - message.health
+		if self.bat_health <= 0 then
+			kill_bat(self)
+		end
+	end
+
+	-- TODO: Condense into one "enemy" script and add both of these attacks as a "basic" attack.
+	-- Github ticket: https://github.com/NoktyNx/horrortowertd/issues/7
+	if message_id == hash("zombie_damages_player") then
+		zombie_damages_player(self)
+	end
+	
+	-- Stat setters
+	if message_id == hash("set_stat") then
+		if message.stat == "health" then
+			self.bat_health = message.health
+		elseif message.stat == "speed" then
+			self.bat_speed = message.speed
+		elseif message.stat == "damage" then
+			self.bat_damage = message.damage
+		elseif message.stat == "spawn_side" then
+			self.spawn_side = message.spawn_side
+			self.center = go.get_position(bat_spawn_positions[self.spawn_side])
+		elseif message.stat == "spawn_position" then
+			self.spawn_position = message.spawn_position
+			go.set_position(self.spawn_position)
+		elseif message.stat == "damage_delay" then
+			self.bat_damage_delay = message.damage_delay
+		elseif message.stat == "dealing_damage" then
+			self.dealing_damage = true
+		end
+	end
+end

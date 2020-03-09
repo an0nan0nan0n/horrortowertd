@@ -79,6 +79,26 @@ instances {
     z: 1.0
   }
 }
+instances {
+  id: "bat_spawner"
+  prototype: "/main/enemies/bats/bat_spawner.go"
+  position {
+    x: -181.0
+    y: 569.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
 scale_along_z: 0
 embedded_instances {
   id: "background"
@@ -205,7 +225,9 @@ embedded_instances {
 embedded_instances {
   id: "spawn_points"
   children: "left_spawn"
+  children: "left_spawn_upper"
   children: "right_spawn"
+  children: "right_spawn_upper"
   data: ""
   position {
     x: 0.0
@@ -262,6 +284,8 @@ embedded_instances {
 embedded_instances {
   id: "attack_points"
   children: "left"
+  children: "middle_left"
+  children: "middle_right"
   children: "right"
   children: "top_left"
   children: "top_right"
@@ -347,7 +371,7 @@ embedded_instances {
   id: "right"
   data: ""
   position {
-    x: 637.0
+    x: 790.0
     y: 356.0
     z: 0.1
   }
@@ -367,8 +391,8 @@ embedded_instances {
   id: "top_left"
   data: ""
   position {
-    x: 637.0
-    y: 356.0
+    x: 495.0
+    y: 392.0
     z: 0.1
   }
   rotation {
@@ -387,8 +411,8 @@ embedded_instances {
   id: "top_right"
   data: ""
   position {
-    x: 637.0
-    y: 356.0
+    x: 781.0
+    y: 393.0
     z: 0.1
   }
   rotation {
@@ -405,6 +429,7 @@ embedded_instances {
 }
 embedded_instances {
   id: "spawners"
+  children: "bat_spawner"
   children: "zombie_spawner"
   data: ""
   position {
@@ -439,21 +464,6 @@ embedded_instances {
   "    y: 0.0\n"
   "    z: 0.0\n"
   "    w: 1.0\n"
-  "  }\n"
-  "  properties {\n"
-  "    id: \"zombie damage\"\n"
-  "    value: \"10.0\"\n"
-  "    type: PROPERTY_TYPE_NUMBER\n"
-  "  }\n"
-  "  properties {\n"
-  "    id: \"zombie damage delay\"\n"
-  "    value: \"1.0\"\n"
-  "    type: PROPERTY_TYPE_NUMBER\n"
-  "  }\n"
-  "  properties {\n"
-  "    id: \"zombie speed\"\n"
-  "    value: \"50.0\"\n"
-  "    type: PROPERTY_TYPE_NUMBER\n"
   "  }\n"
   "}\n"
   ""
@@ -516,6 +526,86 @@ embedded_instances {
   position {
     x: 0.0
     y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "left_spawn_upper"
+  data: ""
+  position {
+    x: 0.0
+    y: 599.0
+    z: 0.1
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "right_spawn_upper"
+  data: ""
+  position {
+    x: 1283.0
+    y: 599.0
+    z: 0.1
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "middle_left"
+  data: ""
+  position {
+    x: 590.0
+    y: 391.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "middle_right"
+  data: ""
+  position {
+    x: 700.0
+    y: 393.0
     z: 0.0
   }
   rotation {

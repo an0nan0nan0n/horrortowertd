@@ -14,6 +14,38 @@ function init(self)
 	pprint("zombie.script: url is " .. msg.url())
 end
 
+local function zombie_damages_player(self)
+	msg.post("/controller#game", "subtract_health", { health = self.zombie_damage })
+	self.dealing_damage = false
+	print('zombie.script: dealt ' .. self.zombie_damage .. ' damage to player')
+end
+
+local function kill_zombie(self)
+	-- Kills the zombie.
+	msg.post("/zombie_spawner#zombie_spawner", "delete_zombie", { zombie_id = go.get_id() })
+	go.delete()
+end
+
+local function start_zombie_attack(self)
+	-- Spawns a zombie_attack game object from the zombie_attack factory to attack the player.
+	-- TODO: Condense into one "enemy" script and add both of these attacks as a "basic" attack.
+	-- Github ticket: https://github.com/NoktyNx/horrortowertd/issues/7
+	pprint('zombie.script: spawning zombie_attack - will be updated to a enemy "basic" attack all enemies use in the future.')
+	self.dealing_damage = true
+	local starting_pos = go.get_position()
+	if self.spawn_side == 'left' then
+		starting_x = starting_pos.x - 20
+		ending_x = starting_pos.x + 5
+	elseif self.spawn_side == 'right' then
+		starting_x = starting_pos.x + 20
+		ending_x = starting_pos.x - 5
+	end
+	zombie_attack_id = factory.create("/zombie_spawner#" .. "zombie_attack", vmath.vector3(starting_x, starting_pos.y, starting_pos.z))
+	zombie_attack_script_url = msg.url(nil, zombie_attack_id, "script")
+	msg.post(zombie_attack_script_url, "set_parent_game_object", { parent=msg.url() })
+	go.animate(zombie_attack_id, "position.x", go.PLAYBACK_ONCE_FORWARD, ending_x, go.EASING_LINEAR, self.zombie_damage_delay)
+end
+
 function update(self, dt)
 	if self.reached_destination == false then  -- Move every game update.
 		-- TODO: Could this formula be improved?
@@ -75,34 +107,4 @@ function on_message(self, message_id, message, sender)
 			self.dealing_damage = true
 		end
 	end
-end
-
-function start_zombie_attack(self)
-	-- Spawns a zombie_attack game object from the zombie_attack factory to attack the player.
-	pprint('zombie.script: spawning zombie_attack ')
-	self.dealing_damage = true
-	local starting_pos = go.get_position()
-	if self.spawn_side == 'left' then
-		starting_x = starting_pos.x - 20
-		ending_x = starting_pos.x + 5
-	elseif self.spawn_side == 'right' then
-		starting_x = starting_pos.x + 20
-		ending_x = starting_pos.x - 5
-	end
-	zombie_attack_id = factory.create("/zombie_spawner#" .. "zombie_attack", vmath.vector3(starting_x, starting_pos.y, starting_pos.z))
-	zombie_attack_script_url = msg.url(nil, zombie_attack_id, "script")
-	msg.post(zombie_attack_script_url, "set_parent_game_object", { parent=msg.url() })
-	go.animate(zombie_attack_id, "position.x", go.PLAYBACK_ONCE_FORWARD, ending_x, go.EASING_LINEAR, self.zombie_damage_delay)
-end
-
-function zombie_damages_player(self)
-	msg.post("/controller#game", "subtract_health", { health = self.zombie_damage })
-	self.dealing_damage = false
-	print('zombie.script: dealt ' .. self.zombie_damage .. ' damage to player')
-end
-
-function kill_zombie(self)
-	-- Kills the zombie.
-	msg.post("/zombie_spawner#zombie_spawner", "delete_zombie", { zombie_id = go.get_id() })
-	go.delete()
 end

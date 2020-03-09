@@ -1,0 +1,128 @@
+helpers = require("utility.helpers") -- imports dump() & len() functions
+
+local bat_spawn_positions = { left = '/left_spawn_upper', right = '/right_spawn_upper' }
+local bat_attack_spots = { '/top_left', '/top_right', '/middle_left', '/middle_right' }
+local bat_spawn_limit = 4  -- Current spawn limit for bats.
+
+function init(self)
+	pprint("bat_spawner.script: url is " .. msg.url())
+	-- Values for the bat_spawner to track.
+	self.current_spawn_side = 'left' -- First bat spawns from the left.
+	self.spawn_sides = {'left', 'right'} -- Both spawn sides for use in update_current_spawn_side()
+	self.timeline_timer = 0  -- Used for the spawn timer formula in update()
+	self.bat_left_spawns = 0  -- Tracks the count for bats spawned from the left.
+	self.bat_right_spawns = 0  -- Tracks the count for bats spawned from the right.
+	self.bats_spawned = 0  -- Tracks the total count of bats spawned, regardless of side.
+	self.bat_game_objects = {} -- Tracks spawned bat game objects.
+	self.bat_types = { 'bat_a', 'bat_b' }  -- Possible bat game objects from the main/enemies/bat folder.
+
+	-- Speed, max health, and damage dealt by spawned bats.
+	self.bat_health = 0
+	self.bat_speed = 0
+	self.bat_damage = 0
+	self.bat_damage_delay = 0
+	self.bat_spawn_delay = 0
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("set_stat") then
+		if message.stat == "health" then
+			self.bat_health = message.health
+		elseif message.stat == "speed" then
+			self.bat_speed = message.speed
+		elseif message.stat == "damage" then
+			self.bat_damage = message.damage
+		elseif message.stat == "damage_delay" then
+			self.bat_damage_delay = message.damage_delay
+		elseif message.stat == "spawn_delay" then
+			self.bat_spawn_delay = message.spawn_delay
+		end
+	end
+
+	if message_id == hash("delete_bat") then
+		print(dump(self.bat_game_objects))
+		for key, bat_id in pairs(self.bat_game_objects) do
+			if bat_id == message.bat_id then
+				table.remove(self.bat_game_objects, key)
+				self.bats_spawned = self.bats_spawned - 1
+			end
+		end
+	end
+end
+
+
+local function update_bat_spawn_count(self)
+	-- Tracks how many bats are spawned total and logs to self.bats_spawned.
+	if self.current_spawn_side == 'left' then
+		self.bat_left_spawns = self.bat_left_spawns + 1
+	elseif self.current_spawn_side == 'right' then
+		self.bat_right_spawns = self.bat_right_spawns + 1
+	end
+	self.bats_spawned = self.bats_spawned + 1
+end
+
+local function update_current_spawn_side(self)
+	-- Changes the side for bats to spawn from, based on the amount of bats on each side.
+	if self.bat_left_spawns > self.bat_right_spawns then
+		new_side = self.spawn_sides[2]  -- right side
+	elseif self.bat_right_spawns > self.bat_left_spawns then
+		new_side = self.spawn_sides[1]  -- left side
+	else
+		new_side = self.spawn_sides[math.random(1, len(self.spawn_sides))]
+	end
+	self.current_spawn_side = new_side
+end
+
+local function spawn_bat(self, bat_type, spawn_position)
+	-- Spawns a bat, calls the update functions for counts and spawn sides for the next bat.
+	-- Also flips the sprite for the bat based on the side it spawns from.
+	-- Tallies the newly created bat sprite to the self.bat_sprites table.
+	pprint('bat_spawner.script: spawning bat at ' .. spawn_position)
+	if bat_type ~= nil then
+		-- Make new bat game object.
+		bat_id = factory.create("/bat_spawner#" .. bat_type, spawn_position)
+		bat_sprite_url = msg.url(nil, bat_id, "sprite")
+		bat_script_url = msg.url(nil, bat_id, "script")
+		bat_attack_spot = bat_attack_spots[math.random(1, len(bat_attack_spots))]
+
+		-- Store the spawned bat in a table.
+		table.insert(self.bat_game_objects, bat_id)
+
+		-- Flip the sprite if it spawns from the right since default facing is left, then play its animations.
+		if self.current_spawn_side == 'right' then
+			sprite.set_hflip(bat_sprite_url, true)
+		end
+
+		msg.post(bat_script_url, 'set_stat', { stat = 'speed', speed = self.bat_speed })
+		msg.post(bat_script_url, 'set_stat', { stat = 'damage', damage = self.bat_damage })
+		msg.post(bat_script_url, 'set_stat', { stat = 'damage_delay', damage_delay = self.bat_damage_delay })
+		msg.post(bat_script_url, 'set_stat', { stat = 'health', health = self.bat_health })
+		msg.post(bat_script_url, 'set_stat', { stat = 'spawn_side', spawn_side = self.current_spawn_side })
+		msg.post(bat_script_url, 'set_stat', { stat = 'spawn_position', spawn_position = spawn_position })
+		msg.post(bat_sprite_url, "play_animation", { id=hash("walk_forward") })
+		go.animate(bat_id, "position", go.PLAYBACK_ONCE_FORWARD, go.get_position(bat_attack_spot), go.EASING_LINEAR, self.bat_speed)
+		print('bat_spawner.script: bat spawned from ' .. self.current_spawn_side .. ' side.')
+	end
+
+	-- Update counts and spawn side for the next bat if we spawn one again.
+	update_bat_spawn_count(self)
+	update_current_spawn_side(self)
+end
+
+
+function update(self, dt)
+	-- TODO: Update spawn timer formula.
+	if self.bat_spawn_delay ~= nil then
+		self.timeline_timer = self.timeline_timer + dt
+		local bat_spawn_delay = math.random(self.bat_spawn_delay, self.bat_spawn_delay + 3)
+
+		-- If the spawn delay is less than or equal to the spawn timer,
+		-- & the current bats spawned are not equal to the bat spawn limit, spawn a new bat.
+		if bat_spawn_delay <= self.timeline_timer and bat_spawn_limit ~= self.bats_spawned then
+			bat_type = self.bat_types[math.random(1, len(self.bat_types))]
+			spawn_position = go.get_position(bat_spawn_positions[self.current_spawn_side])
+			spawn_bat(self, bat_type, spawn_position)
+			self.timeline_timer = 0
+		end
+	end
+end

@@ -1,0 +1,126 @@
+image: "/gamelib/assets/sprites/bats.png"
+tile_width: 32
+tile_height: 32
+tile_margin: 0
+tile_spacing: 0
+collision: "/gamelib/assets/sprites/bats.png"
+material_tag: "tile"
+convex_hulls {
+  index: 0
+  count: 12
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 12
+  count: 10
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 22
+  count: 6
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 28
+  count: 8
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 36
+  count: 9
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 45
+  count: 10
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 55
+  count: 11
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 66
+  count: 11
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 77
+  count: 10
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 87
+  count: 10
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 97
+  count: 6
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 103
+  count: 10
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 113
+  count: 9
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 122
+  count: 10
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 132
+  count: 11
+  collision_group: "enemy"
+}
+convex_hulls {
+  index: 143
+  count: 11
+  collision_group: "enemy"
+}
+collision_groups: "enemy"
+animations {
+  id: "idle"
+  start_tile: 7
+  end_tile: 7
+  playback: PLAYBACK_ONCE_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "walk_down"
+  start_tile: 2
+  end_tile: 4
+  playback: PLAYBACK_LOOP_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "walk_forward"
+  start_tile: 6
+  end_tile: 8
+  playback: PLAYBACK_LOOP_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "walk_up"
+  start_tile: 10
+  end_tile: 12
+  playback: PLAYBACK_LOOP_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+extrude_borders: 2
+inner_padding: 0
