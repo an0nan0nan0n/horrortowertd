@@ -1,7 +1,6 @@
 helpers = require("utility.helpers") -- imports dump() & len() functions
 
 local zombie_spawn_positions = { left = '/left_spawn', right = '/right_spawn' }
-local zombie_spawn_limit = 10  -- Current spawn limit for zombies.
 
 function init(self)
 	pprint("zombie_spawner.script: url is " .. msg.url())
@@ -13,7 +12,8 @@ function init(self)
 	self.zombie_right_spawns = 0  -- Tracks the count for zombies spawned from the right.
 	self.zombies_spawned = 0  -- Tracks the total count of zombies spawned, regardless of side.
 	self.zombie_game_objects = {} -- Tracks spawned zombie game objects.
-	self.zombie_types = { 'zombie_a', 'zombie_b', 'zombie_c', 'zombie_d' }  -- Possible zombie game objects from the main/enemies/zombies folder.
+	self.zombie_types = { 'zombie_a', 'zombie_b', 'zombie_c', 'zombie_d' } 
+	self.zombie_spawn_limit = 0 -- Spawn limit for zombies (WARNINGS: Affects game load memory)
 
 	-- Speed, max health, and damage dealt by spawned zombies.
 	self.zombie_health = 0
@@ -35,6 +35,8 @@ function on_message(self, message_id, message, sender)
 			self.zombie_damage_delay = message.damage_delay
 		elseif message.stat == "spawn_delay" then
 			self.zombie_spawn_delay = message.spawn_delay
+		elseif message.stat == "zombie_spawn_limit" then
+			self.zombie_spawn_limit = message.zombie_spawn_limit
 		end
 	end
 

@@ -6,10 +6,11 @@ go.property("ammo", 100)
 go.property("gold", 1)
 go.property("tier", 1)
 go.property("zombie spawn delay", 2)
+go.property("zombie spawn limit", 15)
 go.property("zombie max health", 5)
 go.property("zombie damage", 10)
 go.property("zombie damage delay", 5)
-go.property("zombie speed", 35)  -- Higher is faster
+go.property("zombie speed", 65)  -- Higher is faster
 go.property("bat spawn delay", 5)
 go.property("bat max health", 10)
 go.property("bat damage", 5)
@@ -39,6 +40,7 @@ function init(self)
 	self.enemy_values = { 
 		zombie = {
 			spawn_delay = go.get("/controller#game", "zombie spawn delay"),
+			spawn_limit = go.get("/controller#game", "zombie spawn limit"),
 			speed = go.get("/controller#game", "zombie speed"),
 			health = go.get("/controller#game", "zombie max health"),
 			damage = go.get("/controller#game", "zombie damage"),
@@ -54,6 +56,7 @@ function init(self)
 	}
 	-- TODO: Make for loop.
 	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'spawn_delay', spawn_delay = self.enemy_values.zombie.spawn_delay })
+	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'spawn_limit', spawn_limit = self.enemy_values.zombie.spawn_limit })
 	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'speed', speed = self.enemy_values.zombie.speed })
 	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'health', health = self.enemy_values.zombie.health })
 	msg.post('/zombie_spawner#zombie_spawner', 'set_stat', { stat = 'damage', damage = self.enemy_values.zombie.damage })
