@@ -35,7 +35,7 @@ function on_message(self, message_id, message, sender)
 			self.zombie_damage_delay = message.damage_delay
 		elseif message.stat == "spawn_delay" then
 			self.zombie_spawn_delay = message.spawn_delay
-		elseif message.stat == "zombie_spawn_limit" then
+		elseif message.stat == "spawn_limit" then
 			self.zombie_spawn_limit = message.zombie_spawn_limit
 		end
 	end
@@ -99,6 +99,7 @@ local function spawn_zombie(self, zombie_type, spawn_position)
 		msg.post(zombie_script_url, 'set_stat', { stat = 'spawn_side', spawn_side = self.current_spawn_side })
 		msg.post(zombie_script_url, "set_move_direction", { direction=self.current_spawn_side })
 		msg.post(zombie_sprite_url, "play_animation", { id=hash("walk_forward") })
+		go.animate(zombie_id, "position", go.PLAYBACK_ONCE_FORWARD, go.get_position(bat_attack_spot), go.EASING_LINEAR, self.bat_speed)
 		print('zombie_spawner.script: zombie spawned from ' .. self.current_spawn_side .. ' side.')
 	end
 

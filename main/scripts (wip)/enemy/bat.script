@@ -1,9 +1,6 @@
 local bat_spawn_positions = { left = '/left_spawn_upper', right = '/right_spawn_upper' }
 
 function init(self)
-	self.center = go.get_position(bat_spawn_positions.left)
-	self.radius = 100
-	self.time = 0
 	self.reached_destination = false
 	self.dealing_damage = false
 	self.spawn_side = nil
@@ -24,10 +21,9 @@ local function start_bat_attack(self)
 	-- Github ticket: https://github.com/NoktyNx/horrortowertd/issues/7
 	pprint('bat.script: spawning zombie_attack - will be updated to a enemy "basic" attack all enemies use in the future.')
 	self.dealing_damage = true
-	local starting_pos = go.get_position()
-	starting_y = starting_pos.y + 1
-	ending_y = starting_pos.y - 5
-	bat_attack_id = factory.create("/zombie_spawner#" .. "zombie_attack", vmath.vector3(starting_pos.x, starting_y, starting_pos.z))
+	starting_y = self.pos.y + 2
+	ending_y = self.pos.y - 2
+	bat_attack_id = factory.create("/zombie_spawner#" .. "zombie_attack", vmath.vector3(self.pos.x, starting_y, self.pos.z))
 	bat_attack_script_url = msg.url(nil, bat_attack_id, "script")
 
 	msg.post(bat_attack_script_url, "set_parent_game_object", { parent=msg.url() })
@@ -52,7 +48,6 @@ function update(self, dt)
 	if self.reached_destination == false then
 		self.pos = go.get_position()
 	elseif self.reached_destination == true and self.dealing_damage == false then
-		self.pos = go.get_position()
 		start_bat_attack(self)
 	end
 end
@@ -61,13 +56,9 @@ function on_message(self, message_id, message, sender)
 	-- Stop moving when we hit the tower collision.
 	if message_id == hash("collision_response") and message.group == hash("environment") then
 		self.reached_destination = true
-		-- Without this off-set adjustment, collision_response won't register for bat_attack game objects.
-		if self.spawn_side == 'left' then
-			self.x_adjustment = self.pos.x - 2
-		elseif self.spawn_side == 'right' then
-			self.x_adjustment = self.pos.x + 2
-			go.set_position(vmath.vector3(self.x_adjustment, self.pos.y, self.pos.z))
-		end
+		x_adjustment = self.pos.x + 2
+		y_adjustment = self.pos.y + 1
+		go.set_position(vmath.vector3(x_adjustment, y_adjustment, self.pos.z))
 	elseif message_id == hash("collision_response") and message.group == hash("ability") then
 		local ability_url = msg.url(message.other_id)
 		ability_url.fragment = "script"
@@ -98,7 +89,6 @@ function on_message(self, message_id, message, sender)
 			self.bat_damage = message.damage
 		elseif message.stat == "spawn_side" then
 			self.spawn_side = message.spawn_side
-			self.center = go.get_position(bat_spawn_positions[self.spawn_side])
 		elseif message.stat == "spawn_position" then
 			self.spawn_position = message.spawn_position
 			go.set_position(self.spawn_position)

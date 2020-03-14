@@ -1,4 +1,4 @@
-script: "/main/screens/game/player_ui.gui_script"
+script: "/main/gui_scripts/player_ui.gui_script"
 fonts {
   name: "system_font"
   font: "/builtins/fonts/system_font.font"

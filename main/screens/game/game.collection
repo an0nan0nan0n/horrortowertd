@@ -453,7 +453,7 @@ embedded_instances {
   id: "controller"
   data: "components {\n"
   "  id: \"game\"\n"
-  "  component: \"/main/screens/game/game.script\"\n"
+  "  component: \"/main/scripts (wip)/game.script\"\n"
   "  position {\n"
   "    x: 0.0\n"
   "    y: 0.0\n"

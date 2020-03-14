@@ -1,7 +1,7 @@
 name: "level_loader"
 instances {
   id: "level_loader"
-  prototype: "/main/level_loader.go"
+  prototype: "/main/screens/level_loader.go"
   position {
     x: 0.0
     y: 0.0
@@ -24,7 +24,7 @@ embedded_instances {
   id: "screens"
   data: "components {\n"
   "  id: \"screens\"\n"
-  "  component: \"/main/screens.script\"\n"
+  "  component: \"/main/scripts (wip)/screens.script\"\n"
   "  position {\n"
   "    x: 0.0\n"
   "    y: 0.0\n"

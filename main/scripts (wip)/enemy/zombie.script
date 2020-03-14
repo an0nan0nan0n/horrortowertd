@@ -60,12 +60,11 @@ function on_message(self, message_id, message, sender)
 	-- Stop moving when we hit the tower collision.
 	if message_id == hash("collision_response") and message.group == hash("environment") then
 		self.reached_destination = true
-		-- Without this off-set adjustment, collision_response won't register for zombie_attack game objects.
 		if self.spawn_side == 'left' then
-			self.x_adjustment = self.pos.x - 2
+			x_adjustment = self.pos.x - 2
 		elseif self.spawn_side == 'right' then
-			self.x_adjustment = self.pos.x + 2
-			go.set_position(vmath.vector3(self.x_adjustment, self.pos.y, self.pos.z))
+			x_adjustment = self.pos.x + 2
+			go.set_position(vmath.vector3(x_adjustment, self.pos.y, self.pos.z))
 		end
 	elseif message_id == hash("collision_response") and message.group == hash("ability") then
 		local ability_url = msg.url(message.other_id)

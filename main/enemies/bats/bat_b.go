@@ -1,6 +1,6 @@
 components {
   id: "script"
-  component: "/main/enemies/bats/bat.script"
+  component: "/main/scripts (wip)/enemy/bat.script"
   position {
     x: 0.0
     y: 0.0

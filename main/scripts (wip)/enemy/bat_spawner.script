@@ -1,4 +1,4 @@
-helpers = require("utility.helpers") -- imports dump() & len() functions
+-- helpers = require("utility.helpers") -- imports dump() & len() functions
 
 local bat_spawn_positions = { left = '/left_spawn_upper', right = '/right_spawn_upper' }
 local bat_attack_spots = { '/top_left', '/top_right', '/middle_left', '/middle_right' }

@@ -1,6 +1,6 @@
 components {
   id: "zombie_spawner"
-  component: "/main/enemies/zombies/zombie_spawner.script"
+  component: "/main/scripts (wip)/enemy/zombie_spawner.script"
   position {
     x: 0.0
     y: 0.0

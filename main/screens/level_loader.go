@@ -1,6 +1,6 @@
 components {
   id: "script"
-  component: "/main/level_loader.script"
+  component: "/main/scripts (wip)/level_loader.script"
   position {
     x: 0.0
     y: 0.0

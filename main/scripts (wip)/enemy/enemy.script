@@ -1,0 +1,102 @@
+-- Main script all enemy game objects use.
+
+function init(self)
+	pprint("enemy.script: url is " .. msg.url())
+	-- Toggles
+	self.reached_destination = false
+	self.dealing_damage = false
+
+	-- Positions
+	self.pos = go.get_position()
+	self.direction = 0
+	self.velocity = vmath.vector3(0, 0, 0)
+	self.spawn_side = nil
+	self.spawn_position = nil
+
+	-- Stats
+	self.enemy_name = nil
+	self.enemy_health = 0
+	self.enemy_speed = 0
+	self.enemy_damage = 0
+	self.enemy_damage_delay = 0
+end
+
+function update(self, dt)
+	if self.reached_destination == false then
+		self.pos = go.get_position()
+	elseif self.reached_destination == true and self.dealing_damage == false then
+		start_enemy_attack(self, self.enemy_name)
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	pprint('enemy.script: setting stats for enemy: '..self.enemy_name..)
+	if message_id == hash("set_stat") then
+		if message.stat == "health" then
+			self.enemy_health = message.health
+		elseif message.stat == "speed" then
+			self.enemy_speed = message.speed
+		elseif message.stat == "damage" then
+			self.enemy_damage = message.damage
+		elseif message.stat == "damage_delay" then
+			self.enemy_damage_delay = message.damage_delay
+		elseif message.stat == "spawn_delay" then
+			self.enemy_spawn_delay = message.spawn_delay
+		elseif message.stat == "spawn_limit" then
+			self.enemy_spawn_limit = message.zombie_spawn_limit
+		end
+	end
+end
+
+local function start_enemy_attack(self, enemy_name)
+	-- Spawns a zombie_attack game object from the zombie_attack factory to attack the player.
+	-- TODO: Condense into one "enemy" script and add both of these attacks as a "basic" attack.
+	-- Github ticket: https://github.com/NoktyNx/horrortowertd/issues/7
+	pprint('zombie.script: spawning zombie_attack - will be updated to a enemy "basic" attack all enemies use in the future.')
+	self.dealing_damage = true
+	local starting_pos = go.get_position()
+	if self.spawn_side == 'left' then
+		starting_x = starting_pos.x - 20
+		ending_x = starting_pos.x + 5
+	elseif self.spawn_side == 'right' then
+		starting_x = starting_pos.x + 20
+		ending_x = starting_pos.x - 5
+	end
+	zombie_attack_id = factory.create("/zombie_spawner#" .. "zombie_attack", vmath.vector3(starting_x, starting_pos.y, starting_pos.z))
+	zombie_attack_script_url = msg.url(nil, zombie_attack_id, "script")
+	msg.post(zombie_attack_script_url, "set_parent_game_object", { parent=msg.url() })
+	go.animate(zombie_attack_id, "position.x", go.PLAYBACK_ONCE_FORWARD, ending_x, go.EASING_LINEAR, self.zombie_damage_delay)
+
+
+	-- Spawns a zombie_attack game object from the zombie_attack factory to attack the player.
+	-- TODO: Condense into one "enemy" script and add both of these attacks as a "basic" attack.
+	-- Github ticket: https://github.com/NoktyNx/horrortowertd/issues/7
+	pprint('bat.script: spawning zombie_attack - will be updated to a enemy "basic" attack all enemies use in the future.')
+	self.dealing_damage = true
+	starting_y = self.pos.y + 2
+	ending_y = self.pos.y - 2
+	bat_attack_id = factory.create("/zombie_spawner#" .. "zombie_attack", vmath.vector3(self.pos.x, starting_y, self.pos.z))
+	bat_attack_script_url = msg.url(nil, bat_attack_id, "script")
+
+	msg.post(bat_attack_script_url, "set_parent_game_object", { parent=msg.url() })
+	go.animate(bat_attack_id, "position.y", go.PLAYBACK_ONCE_FORWARD, ending_y, go.EASING_LINEAR, self.bat_damage_delay)
+end
+
+local function enemy_damages_player(self)
+	-- Sends messages to game.script to damage the player.
+	msg.post("/controller#game", "subtract_health", { health = self.enemy_damage })
+	self.dealing_damage = false
+	pprint('enemy.script:' .. self.enemy_name .. 'dealt '.. self.enemy_damage .. ' damage to player')
+end
+
+local function kill_enemy(self, spawner)
+	-- Kills the enemy.
+	pprint('enemy.script: killing enemy using enemy_spawner "'..spawner..'"')
+	msg.post("/"..spawner.."#"..spawner, "delete_enemy", { enemy_id = go.get_id() })
+	go.delete()
+end
+
+function final(self)
+	-- Add delete call here for any objects spawned by the enemy.
+	pprint('enemy.script: cleaning up any objects spawned by ' .. self.enemy_name)
+end

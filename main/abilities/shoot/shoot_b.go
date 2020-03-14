@@ -1,6 +1,6 @@
 components {
   id: "script"
-  component: "/main/abilities/shoot/shoot_damage.script"
+  component: "/main/scripts (wip)/ability/shoot_damage.script"
   position {
     x: 0.0
     y: 0.0

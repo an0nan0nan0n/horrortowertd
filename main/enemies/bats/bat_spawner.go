@@ -1,6 +1,6 @@
 components {
   id: "bat_spawner"
-  component: "/main/enemies/bats/bat_spawner.script"
+  component: "/main/scripts (wip)/enemy/bat_spawner.script"
   position {
     x: 0.0
     y: 0.0
